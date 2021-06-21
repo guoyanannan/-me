@@ -30,7 +30,11 @@ class LabelQLineEdit(QtWidgets.QLineEdit):
 class LabelDialog(QtWidgets.QDialog):
     def __init__(
         self,
-        text="Enter object label",
+        # text="Enter object label",
+        text="请输入英文类别名或拼音",
+        text1='请输入中文类别名',
+        text2='请输入目标类别的确认程度:1-9',
+        text3='请输入图片的清晰度:1-9',
         parent=None,
         labels=None,
         sort_labels=True,
@@ -48,6 +52,21 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit.setPlaceholderText(text)
         self.edit.setValidator(labelme.utils.labelValidator())
         self.edit.editingFinished.connect(self.postProcess)
+        #
+        self.edit1 = LabelQLineEdit()
+        self.edit1.setPlaceholderText(text1)
+        self.edit1.setValidator(labelme.utils.labelValidator())
+        self.edit1.editingFinished.connect(self.postProcess)
+        #
+        self.edit2 = LabelQLineEdit()
+        self.edit2.setPlaceholderText(text2)
+        self.edit2.setValidator(labelme.utils.labelValidator())
+        self.edit2.editingFinished.connect(self.postProcess)
+        #
+        self.edit3 = LabelQLineEdit()
+        self.edit3.setPlaceholderText(text3)
+        self.edit3.setValidator(labelme.utils.labelValidator())
+        self.edit3.editingFinished.connect(self.postProcess)
         if flags:
             self.edit.textChanged.connect(self.updateFlags)
         self.edit_group_id = QtWidgets.QLineEdit()
@@ -57,8 +76,11 @@ class LabelDialog(QtWidgets.QDialog):
         )
         layout = QtWidgets.QVBoxLayout()
         if show_text_field:
-            layout_edit = QtWidgets.QHBoxLayout()
-            layout_edit.addWidget(self.edit, 6)
+            layout_edit = QtWidgets.QVBoxLayout()
+            layout_edit.addWidget(self.edit, 12)
+            layout_edit.addWidget(self.edit1, 6)
+            layout_edit.addWidget(self.edit2, 2)
+            layout_edit.addWidget(self.edit3, 2)
             layout_edit.addWidget(self.edit_group_id, 2)
             layout.addLayout(layout_edit)
         # buttons
@@ -67,6 +89,7 @@ class LabelDialog(QtWidgets.QDialog):
             QtCore.Qt.Horizontal,
             self,
         )
+        #设置图标
         bb.button(bb.Ok).setIcon(labelme.utils.newIcon("done"))
         bb.button(bb.Cancel).setIcon(labelme.utils.newIcon("undo"))
         bb.accepted.connect(self.validate)
@@ -212,6 +235,8 @@ class LabelDialog(QtWidgets.QDialog):
         # if text is None, the previous label in self.edit is kept
         if text is None:
             text = self.edit.text()
+            text1 = self.edit1.text()
+            text2 = self.edit2.text()
         if flags:
             self.setFlags(flags)
         else:
@@ -222,6 +247,7 @@ class LabelDialog(QtWidgets.QDialog):
             self.edit_group_id.clear()
         else:
             self.edit_group_id.setText(str(group_id))
+
         items = self.labelList.findItems(text, QtCore.Qt.MatchFixedString)
         if items:
             if len(items) != 1:
@@ -233,6 +259,12 @@ class LabelDialog(QtWidgets.QDialog):
         if move:
             self.move(QtGui.QCursor.pos())
         if self.exec_():
-            return self.edit.text(), self.getFlags(), self.getGroupId()
+            text3 = self.edit3.text()
+            text2 = self.edit2.text()
+            if len(text3)==0:
+                text3 = '9'
+            if len(text2)==0:
+                text2 = '9'
+            return self.edit.text(), self.getFlags(), self.getGroupId(),self.edit1.text(),text2,text3
         else:
-            return None, None, None
+            return None, None, None,None, None, None

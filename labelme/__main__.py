@@ -113,8 +113,9 @@ def main():
         print("{0} {1}".format(__appname__, __version__))
         sys.exit(0)
 
+    #获取logging对象中的属性:args.logger_level.upper() getattr
     logger.setLevel(getattr(logging, args.logger_level.upper()))
-
+    #hasattr() 函数用于判断对象是否包含对应的属性。
     if hasattr(args, "flags"):
         if os.path.isfile(args.flags):
             with codecs.open(args.flags, "r", encoding="utf-8") as f:
@@ -160,6 +161,7 @@ def main():
         else:
             output_dir = output
 
+    #汉化
     translator = QtCore.QTranslator()
     translator.load(
         QtCore.QLocale.system().name(),
@@ -168,6 +170,7 @@ def main():
     app = QtWidgets.QApplication(sys.argv)
     app.setApplicationName(__appname__)
     app.setWindowIcon(newIcon("icon"))
+    #汉化
     app.installTranslator(translator)
     win = MainWindow(
         config=config,

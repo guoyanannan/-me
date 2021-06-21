@@ -76,9 +76,12 @@ class LabelFile(object):
             "flags",  # image level flags
             "imageHeight",
             "imageWidth",
+            "definition",
         ]
         shape_keys = [
             "label",
+            "Chineselabel",
+            "difficult",
             "points",
             "group_id",
             "shape_type",
@@ -113,6 +116,7 @@ class LabelFile(object):
                 imageData = self.load_image_file(imagePath)
             flags = data.get("flags") or {}
             imagePath = data["imagePath"]
+            definition = data["definition"]
             self._check_image_height_and_width(
                 base64.b64encode(imageData).decode("utf-8"),
                 data.get("imageHeight"),
@@ -121,6 +125,8 @@ class LabelFile(object):
             shapes = [
                 dict(
                     label=s["label"],
+                    label_ch=s["label_ch"],
+                    label_dif=s["label_dif"],
                     points=s["points"],
                     shape_type=s.get("shape_type", "polygon"),
                     flags=s.get("flags", {}),
@@ -146,6 +152,7 @@ class LabelFile(object):
         self.imageData = imageData
         self.filename = filename
         self.otherData = otherData
+        self.definition = definition
 
     @staticmethod
     def _check_image_height_and_width(imageData, imageHeight, imageWidth):
@@ -174,6 +181,7 @@ class LabelFile(object):
         imageData=None,
         otherData=None,
         flags=None,
+        definition=9,
     ):
         if imageData is not None:
             imageData = base64.b64encode(imageData).decode("utf-8")
@@ -192,6 +200,7 @@ class LabelFile(object):
             imageData=imageData,
             imageHeight=imageHeight,
             imageWidth=imageWidth,
+            definition=definition,
         )
         for key, value in otherData.items():
             assert key not in data

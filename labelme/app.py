@@ -997,6 +997,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         menu = self.menus.recentFiles
         menu.clear()
+        #files 文件列表
         files = [f for f in self.recentFiles if f != current and exists(f)]
         for i, f in enumerate(files):
             icon = utils.newIcon("labels")
@@ -1034,7 +1035,7 @@ class MainWindow(QtWidgets.QMainWindow):
         shape = item.shape()
         if shape is None:
             return
-        text, flags, group_id = self.labelDialog.popUp(
+        text, flags, group_id,name_tuple = self.labelDialog.popUp(
             text=shape.label,
             flags=shape.flags,
             group_id=shape.group_id,
@@ -1105,10 +1106,19 @@ class MainWindow(QtWidgets.QMainWindow):
     def addLabel(self, shape):
         if shape.group_id is None:
             text = shape.label
+            text_ch = shape.label_ch
+            text_dif = shape.label_dif
+            text_imgdif = shape.label_imgdif
+            #text = text0 +" "+ text_ch +" "+ text_dif+" " + text_imgdif
         else:
             text = "{} ({})".format(shape.label, shape.group_id)
+            # text = "{}{}{} ({})".format(shape.label,shape.label_ch, shape.label_dif,shape.group_id)
+            # text = shape.label +" "+ shape.label_ch +" "+ shape.label_dif+" " + shape.label_imgdif+" " + shape.group_id
         label_list_item = LabelListWidgetItem(text, shape)
+        # print(label_list_item)
         self.labelList.addItem(label_list_item)
+        # print(list(self.labelList))
+
         if not self.uniqLabelList.findItemsByLabel(shape.label):
             item = self.uniqLabelList.createItemFromLabel(shape.label)
             self.uniqLabelList.addItem(item)
@@ -1161,7 +1171,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._noSelectionSlot = False
         self.canvas.loadShapes(shapes, replace=replace)
 
+
     def loadLabels(self, shapes):
+        ##---没进来---##
         s = []
         for shape in shapes:
             label = shape["label"]
@@ -1213,6 +1225,8 @@ class MainWindow(QtWidgets.QMainWindow):
             data.update(
                 dict(
                     label=s.label.encode("utf-8") if PY2 else s.label,
+                    Chineselabel=s.label.encode("utf-8") if PY2 else s.label_ch,
+                    difficult=s.label.encode("utf-8") if PY2 else s.label_dif,
                     points=[(p.x(), p.y()) for p in s.points],
                     group_id=s.group_id,
                     shape_type=s.shape_type,
@@ -1220,8 +1234,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
             )
             return data
-
         shapes = [format_shape(item.shape()) for item in self.labelList]
+        img_defi = [item.shape().label_imgdif for item in self.labelList][-1]
+        # print(f"shapes:{shapes}")
+        # print(f"img_defi:{img_defi}")
         flags = {}
         for i in range(self.flag_widget.count()):
             item = self.flag_widget.item(i)
@@ -1242,6 +1258,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 imageWidth=self.image.width(),
                 otherData=self.otherData,
                 flags=flags,
+                definition=img_defi,
             )
             self.labelFile = lf
             items = self.fileListWidget.findItems(
@@ -1302,7 +1319,7 @@ class MainWindow(QtWidgets.QMainWindow):
         group_id = None
         if self._config["display_label_popup"] or not text:
             previous_text = self.labelDialog.edit.text()
-            text, flags, group_id = self.labelDialog.popUp(text)
+            text, flags, group_id,text_ch,text_dif,text_imgdif = self.labelDialog.popUp(text)
             if not text:
                 self.labelDialog.edit.setText(previous_text)
 
@@ -1318,6 +1335,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.labelList.clearSelection()
             shape = self.canvas.setLastLabel(text, flags)
             shape.group_id = group_id
+            shape.label_ch = text_ch
+            shape.label_dif = text_dif
+            shape.label_imgdif = text_imgdif
+
             self.addLabel(shape)
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
