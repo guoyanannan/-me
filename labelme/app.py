@@ -912,8 +912,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def undoShapeEdit(self):
         self.canvas.restoreShape()
         self.labelList.clear()
+        #print(f"self.canvas.shapes:{self.canvas.shapes}")
         self.loadShapes(self.canvas.shapes)
+        #print("4"*5)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
+        #print('5' * 5)
 
     def tutorial(self):
         url = "https://github.com/wkentaro/labelme/tree/master/examples/tutorial"  # NOQA
@@ -1025,7 +1028,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def editLabel(self, item=None):
         if item and not isinstance(item, LabelListWidgetItem):
             raise TypeError("item must be LabelListWidgetItem type")
-
         if not self.canvas.editing():
             return
         if not item:
@@ -1035,7 +1037,7 @@ class MainWindow(QtWidgets.QMainWindow):
         shape = item.shape()
         if shape is None:
             return
-        text, flags, group_id,name_tuple = self.labelDialog.popUp(
+        text, flags, group_id,text_ch,text_dif,text_imgdif = self.labelDialog.popUp(
             text=shape.label,
             flags=shape.flags,
             group_id=shape.group_id,
@@ -1105,11 +1107,26 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def addLabel(self, shape):
         if shape.group_id is None:
-            text = shape.label
-            text_ch = shape.label_ch
-            text_dif = shape.label_dif
-            text_imgdif = shape.label_imgdif
+            try:
+                text = shape.label
+            except:
+                text = ''
+            ##
+            try:
+                text_ch = shape.label_ch
+            except:
+                text_ch = ''
+            ##
+            try:
+                text_dif = shape.label_dif
+            except:
+                text_dif = ''
+            try:
+                text_imgdif = shape.label_imgdif
+            except:
+                text_imgdif = ''
             #text = text0 +" "+ text_ch +" "+ text_dif+" " + text_imgdif
+            #print(text,text_ch,text_dif,text_imgdif)
         else:
             text = "{} ({})".format(shape.label, shape.group_id)
             # text = "{}{}{} ({})".format(shape.label,shape.label_ch, shape.label_dif,shape.group_id)
@@ -1117,7 +1134,7 @@ class MainWindow(QtWidgets.QMainWindow):
         label_list_item = LabelListWidgetItem(text, shape)
         # print(label_list_item)
         self.labelList.addItem(label_list_item)
-        # print(list(self.labelList))
+        #print(list(self.labelList))
 
         if not self.uniqLabelList.findItemsByLabel(shape.label):
             item = self.uniqLabelList.createItemFromLabel(shape.label)
@@ -1127,9 +1144,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelDialog.addLabelHistory(shape.label)
         for action in self.actions.onShapesPresent:
             action.setEnabled(True)
-
         rgb = self._get_rgb_by_label(shape.label)
-
         r, g, b = rgb
         label_list_item.setText(
             '{} <font color="#{:02x}{:02x}{:02x}">●</font>'.format(
@@ -1142,7 +1157,6 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.fill_color = QtGui.QColor(r, g, b, 128)
         shape.select_line_color = QtGui.QColor(255, 255, 255)
         shape.select_fill_color = QtGui.QColor(r, g, b, 155)
-
     def _get_rgb_by_label(self, label):
         if self._config["shape_color"] == "auto":
             item = self.uniqLabelList.findItemsByLabel(label)[0]
@@ -1170,7 +1184,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList.clearSelection()
         self._noSelectionSlot = False
         self.canvas.loadShapes(shapes, replace=replace)
-
 
     def loadLabels(self, shapes):
         ##---没进来---##
