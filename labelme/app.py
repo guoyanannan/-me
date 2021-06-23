@@ -1066,13 +1066,29 @@ class MainWindow(QtWidgets.QMainWindow):
         #     self.tr("None信息使用默认值替换！！")
         # )
 
+
+        try:
+            text_ch = shape.label_ch
+        except:
+            text_ch = shape.Chineselabel
+
+        try:
+            t_dif = shape.label_dif
+        except:
+            t_dif = shape.difficult
+
+        try:
+            t_imgdef = shape.label_imgdif
+        except:
+            t_imgdef = shape.definition
+
         text, flags, group_id,text_ch,text_dif,text_imgdif = self.labelDialog.popUp(
             text=shape.label,
             flags=shape.flags,
             group_id=shape.group_id,
-            text_ch=shape.label_ch,
-            text_dif=shape.label_dif,
-            text_imgdif=shape.label_imgdif
+            text_ch= text_ch,
+            text_dif=t_dif,
+            text_imgdif=t_imgdef,
         )
         # print(text, flags, group_id, text_ch, text_dif, text_imgdif)
         if text is None:
@@ -1285,21 +1301,43 @@ class MainWindow(QtWidgets.QMainWindow):
         lf = LabelFile()
         def format_shape(s):
             data = s.other_data.copy()
-            data.update(
-                dict(
-                    label=s.label.encode("utf-8") if PY2 else s.label,
-                    Chineselabel=s.label.encode("utf-8") if PY2 else s.label_ch,
-                    difficult=s.label.encode("utf-8") if PY2 else s.label_dif,
-                    points=[(p.x(), p.y()) for p in s.points],
-                    group_id=s.group_id,
-                    shape_type=s.shape_type,
-                    flags=s.flags,
+            try:
+                data.update(
+                    dict(
+                        label=s.label.encode("utf-8") if PY2 else s.label,
+                        Chineselabel=s.label.encode("utf-8") if PY2 else s.label_ch,
+                        difficult=s.label.encode("utf-8") if PY2 else s.label_dif,
+                        points=[(p.x(), p.y()) for p in s.points],
+                        group_id=s.group_id,
+                        shape_type=s.shape_type,
+                        flags=s.flags,
+                    )
                 )
-            )
+            except:
+                data.update(
+                    dict(
+                        label=s.label.encode("utf-8") if PY2 else s.label,
+                        Chineselabel=s.label.encode("utf-8") if PY2 else s.Chineselabel,
+                        difficult=s.label.encode("utf-8") if PY2 else s.difficult,
+                        points=[(p.x(), p.y()) for p in s.points],
+                        group_id=s.group_id,
+                        shape_type=s.shape_type,
+                        flags=s.flags,
+                    )
+                )
+
             return data
         shapes = [format_shape(item.shape()) for item in self.labelList]
-        # print(f"shapes:{shapes}")
-        img_defi = [item.shape().label_imgdif for item in self.labelList][-1]
+        img_defi = ''
+        try:
+            img_defi = [item.shape().label_imgdif for item in self.labelList][-1]
+        except:
+            info_decide = [item.shape().definition for item in self.labelList]
+            if len(info_decide) != 0:
+                img_defi = [item.shape().definition for item in self.labelList][-1]
+            elif len(info_decide) == 0:
+                img_defi = '9'
+
         flags = {}
         for i in range(self.flag_widget.count()):
             item = self.flag_widget.item(i)
@@ -1832,24 +1870,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def saveFile(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
-        try:
-            if self.labelFile:
-                # DL20180323 - overwrite when in directory
-                self._saveFile(self.labelFile.filename)
-            elif self.output_file:
-                self._saveFile(self.output_file)
-                self.close()
-            else:
-                self._saveFile(self.saveFileDialog())
-        except:
-            self.errorMessage(
-                self.tr("操作错误|操作取消"),
-                self.tr(
-                    "如果是操作取消:请重新选择！"
-                    "其它情况:请删除框重新操作！"
-                ),
-
-            )
+        # try:
+        if self.labelFile:
+            # DL20180323 - overwrite when in directory
+            self._saveFile(self.labelFile.filename)
+        elif self.output_file:
+            self._saveFile(self.output_file)
+            self.close()
+        else:
+            self._saveFile(self.saveFileDialog())
+        # except:
+        #     self.errorMessage(
+        #         self.tr("操作错误|操作取消"),
+        #         self.tr(
+        #             "如果是操作取消:请重新选择！"
+        #             "其它情况:请删除框重新操作！"
+        #         ),
+        #     )
 
     def saveFileAs(self, _value=False):
         #print('进入调用_saveFile函数的saveFileAs函数')

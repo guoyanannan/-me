@@ -70,7 +70,7 @@ class LabelDialog(QtWidgets.QDialog):
         if flags:
             self.edit.textChanged.connect(self.updateFlags)
         self.edit_group_id = QtWidgets.QLineEdit()
-        self.edit_group_id.setPlaceholderText("Group ID")
+        self.edit_group_id.setPlaceholderText("Group ID,选填项,用于分组比如分割网络")
         self.edit_group_id.setValidator(
             QtGui.QRegExpValidator(QtCore.QRegExp(r"\d*"), None)
         )
@@ -251,13 +251,13 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit.setSelection(0, len(text))
         #Chinese
         self.edit1.setText(str(text1))
-        self.edit1.setSelection(0, len(text1))
+        #self.edit1.setSelection(0, len(text1))
         #difficult
         self.edit2.setText(str(text2))
-        self.edit2.setSelection(0, len(text2))
+        #self.edit2.setSelection(0, len(text2))
         #definition
         self.edit3.setText(str(text3))
-        self.edit3.setSelection(0, len(text3))
+        #self.edit3.setSelection(0, len(text3))
         if group_id is None:
             self.edit_group_id.clear()
         else:
