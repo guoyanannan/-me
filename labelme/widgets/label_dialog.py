@@ -223,7 +223,7 @@ class LabelDialog(QtWidgets.QDialog):
             return int(group_id)
         return None
 
-    def popUp(self, text=None, move=True, flags=None, group_id=None):
+    def popUp(self, text=None, move=True, flags=None, group_id=None,text_ch=None,text_dif=None,text_imgdif=None):
         if self._fit_to_content["row"]:
             self.labelList.setMinimumHeight(
                 self.labelList.sizeHintForRow(0) * self.labelList.count() + 2
@@ -237,12 +237,27 @@ class LabelDialog(QtWidgets.QDialog):
             text = self.edit.text()
             text1 = self.edit1.text()
             text2 = self.edit2.text()
+            text3 = self.edit3.text()
+        else:
+            text = text
+            text1 = text_ch
+            text2 = text_dif
+            text3 = text_imgdif
         if flags:
             self.setFlags(flags)
         else:
             self.resetFlags(text)
         self.edit.setText(text)
         self.edit.setSelection(0, len(text))
+        #Chinese
+        self.edit1.setText(str(text1))
+        self.edit1.setSelection(0, len(text1))
+        #difficult
+        self.edit2.setText(str(text2))
+        self.edit2.setSelection(0, len(text2))
+        #definition
+        self.edit3.setText(str(text3))
+        self.edit3.setSelection(0, len(text3))
         if group_id is None:
             self.edit_group_id.clear()
         else:
@@ -265,6 +280,7 @@ class LabelDialog(QtWidgets.QDialog):
                 text3 = '9'
             if len(text2)==0:
                 text2 = '9'
+            #text, flags, group_id,text_ch,text_dif,text_imgdif
             return self.edit.text(), self.getFlags(), self.getGroupId(),self.edit1.text(),text2,text3
         else:
             return None, None, None,None, None, None

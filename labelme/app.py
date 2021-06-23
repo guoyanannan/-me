@@ -58,6 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
         output_file=None,
         output_dir=None,
     ):
+        self.ch_name = None
         if output is not None:
             logger.warning(
                 "argument output is deprecated, use output_file instead"
@@ -104,7 +105,7 @@ class MainWindow(QtWidgets.QMainWindow):
             fit_to_content=self._config["fit_to_content"],
             flags=self._config["label_flags"],
         )
-
+        # print('进入6')
         self.labelList = LabelListWidget()
         self.lastOpenDir = None
 
@@ -116,7 +117,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.loadFlags({k: False for k in config["flags"]})
         self.flag_dock.setWidget(self.flag_widget)
         self.flag_widget.itemChanged.connect(self.setDirty)
-
+        # print('进入7')
         self.labelList.itemSelectionChanged.connect(self.labelSelectionChanged)
         self.labelList.itemDoubleClicked.connect(self.editLabel)
         self.labelList.itemChanged.connect(self.labelItemChanged)
@@ -125,6 +126,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.tr("Polygon Labels"), self
         )
         self.shape_dock.setObjectName("Labels")
+        # print('进入8')
         self.shape_dock.setWidget(self.labelList)
 
         self.uniqLabelList = UniqueLabelQListWidget()
@@ -164,7 +166,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.zoomWidget = ZoomWidget()
         self.setAcceptDrops(True)
-
+        # print('进入9')
         self.canvas = self.labelList.canvas = Canvas(
             epsilon=self._config["epsilon"],
             double_click=self._config["canvas"]["double_click"],
@@ -549,6 +551,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Lavel list context menu.
         labelMenu = QtWidgets.QMenu()
         utils.addActions(labelMenu, (edit, delete))
+        # print('进入10')
         self.labelList.setContextMenuPolicy(Qt.CustomContextMenu)
         self.labelList.customContextMenuRequested.connect(
             self.popLabelListMenu
@@ -810,6 +813,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # Support Functions
 
     def noShapes(self):
+        # print('进入noShapes')
         return not len(self.labelList)
 
     def populateModeActions(self):
@@ -831,6 +835,7 @@ class MainWindow(QtWidgets.QMainWindow):
         utils.addActions(self.menus.edit, actions + self.actions.editMenu)
 
     def setDirty(self):
+        #print('进入setDirty函数')
         # Even if we autosave the file, we keep the ability to undo
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
 
@@ -847,6 +852,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.filename is not None:
             title = "{} - {}*".format(title, self.filename)
         self.setWindowTitle(title)
+        #print('跳出setDirty函数')
 
     def setClean(self):
         self.dirty = False
@@ -886,6 +892,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.statusBar().showMessage(message, delay)
 
     def resetState(self):
+        # print('进入resetState')
         self.labelList.clear()
         self.filename = None
         self.imagePath = None
@@ -895,7 +902,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.resetState()
 
     def currentItem(self):
+        # print('进入currentItem')
         items = self.labelList.selectedItems()
+        # print(f'item长度:{len(items)}')
         if items:
             return items[0]
         return None
@@ -910,13 +919,11 @@ class MainWindow(QtWidgets.QMainWindow):
     # Callbacks
 
     def undoShapeEdit(self):
+        # print('进入undoShapeEdit')
         self.canvas.restoreShape()
         self.labelList.clear()
-        #print(f"self.canvas.shapes:{self.canvas.shapes}")
         self.loadShapes(self.canvas.shapes)
-        #print("4"*5)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
-        #print('5' * 5)
 
     def tutorial(self):
         url = "https://github.com/wkentaro/labelme/tree/master/examples/tutorial"  # NOQA
@@ -1011,6 +1018,7 @@ class MainWindow(QtWidgets.QMainWindow):
             menu.addAction(action)
 
     def popLabelListMenu(self, point):
+        # print('进入popLabelListMenu')
         self.menus.labelList.exec_(self.labelList.mapToGlobal(point))
 
     def validateLabel(self, label):
@@ -1037,11 +1045,36 @@ class MainWindow(QtWidgets.QMainWindow):
         shape = item.shape()
         if shape is None:
             return
+        #测试代码
+        # print(f"shape.label:{shape.label}")
+        # print(f"shape.flags:{shape.flags}")
+        # print(f"shape.group_id:{shape.group_id}")
+        # # print(f"shape.Chineselabel:{shape.Chineselabel}")
+        # # print(f"shape.difficult:{shape.difficult}")
+        # # print(f"shape.definition:{shape.definition}")
+        # print(f"shape.label_ch:{shape.label_ch}")
+        # print(f"shape.label_dif:{shape.label_dif}")
+        # print(f"shape.label_imgdif:{shape.label_imgdif}")
+        # if shape.Chineselabel is None:
+        #     shape.Chineselabel = self.ch_name
+        # if shape.difficult is None:
+        #     shape.difficult = '9'
+        # if shape.definition is None:
+        #     shape.definition= '9'
+        # self.errorMessage(
+        #     self.tr("提示:"),
+        #     self.tr("None信息使用默认值替换！！")
+        # )
+
         text, flags, group_id,text_ch,text_dif,text_imgdif = self.labelDialog.popUp(
             text=shape.label,
             flags=shape.flags,
             group_id=shape.group_id,
+            text_ch=shape.label_ch,
+            text_dif=shape.label_dif,
+            text_imgdif=shape.label_imgdif
         )
+        # print(text, flags, group_id, text_ch, text_dif, text_imgdif)
         if text is None:
             return
         if not self.validateLabel(text):
@@ -1055,11 +1088,20 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.label = text
         shape.flags = flags
         shape.group_id = group_id
+        shape.Chineselabel = text_ch
+        shape.difficult = text_dif
+        shape.definition = text_imgdif
+        shape.label_ch = text_ch
+        shape.label_dif = text_dif
+        shape.label_imgdif = text_imgdif
+
         if shape.group_id is None:
-            item.setText(shape.label)
+            #item.setText(shape.label)
+            item.setText("{} ({}) ({}) ({}) ({})".format(shape.label, shape.group_id,shape.Chineselabel,shape.difficult,shape.definition))
         else:
             item.setText("{} ({})".format(shape.label, shape.group_id))
         self.setDirty()
+        #print('已进入setDirty函数1')
         if not self.uniqLabelList.findItemsByLabel(shape.label):
             item = QtWidgets.QListWidgetItem()
             item.setData(Qt.UserRole, shape.label)
@@ -1105,7 +1147,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.copy.setEnabled(n_selected)
         self.actions.edit.setEnabled(n_selected == 1)
 
+
     def addLabel(self, shape):
+        # print('进入addLabel')
         if shape.group_id is None:
             try:
                 text = shape.label
@@ -1173,11 +1217,13 @@ class MainWindow(QtWidgets.QMainWindow):
             return self._config["default_shape_color"]
 
     def remLabels(self, shapes):
+        # print('进入remLabels')
         for shape in shapes:
             item = self.labelList.findItemByShape(shape)
             self.labelList.removeItem(item)
 
     def loadShapes(self, shapes, replace=True):
+        # print('进入loadShapes')
         self._noSelectionSlot = True
         for shape in shapes:
             self.addLabel(shape)
@@ -1185,17 +1231,19 @@ class MainWindow(QtWidgets.QMainWindow):
         self._noSelectionSlot = False
         self.canvas.loadShapes(shapes, replace=replace)
 
-    def loadLabels(self, shapes):
-        ##---没进来---##
+    def loadLabels(self, shapes,definition=None):
         s = []
         for shape in shapes:
             label = shape["label"]
+
+            label_ch = shape["label_ch"]
+            difficult = shape["label_dif"]
+
             points = shape["points"]
             shape_type = shape["shape_type"]
             flags = shape["flags"]
             group_id = shape["group_id"]
             other_data = shape["other_data"]
-
             if not points:
                 # skip point-empty shape
                 continue
@@ -1218,7 +1266,9 @@ class MainWindow(QtWidgets.QMainWindow):
             shape.flags = default_flags
             shape.flags.update(flags)
             shape.other_data = other_data
-
+            shape.Chineselabel = label_ch
+            shape.difficult = difficult
+            shape.definition =definition
             s.append(shape)
         self.loadShapes(s)
 
@@ -1231,8 +1281,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.flag_widget.addItem(item)
 
     def saveLabels(self, filename):
+        #print('进入saveLabels')
         lf = LabelFile()
-
         def format_shape(s):
             data = s.other_data.copy()
             data.update(
@@ -1248,9 +1298,8 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             return data
         shapes = [format_shape(item.shape()) for item in self.labelList]
-        img_defi = [item.shape().label_imgdif for item in self.labelList][-1]
         # print(f"shapes:{shapes}")
-        # print(f"img_defi:{img_defi}")
+        img_defi = [item.shape().label_imgdif for item in self.labelList][-1]
         flags = {}
         for i in range(self.flag_widget.count()):
             item = self.flag_widget.item(i)
@@ -1291,6 +1340,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return False
 
     def copySelectedShape(self):
+        # print('进入copySelectedShape')
         added_shapes = self.canvas.copySelectedShapes()
         self.labelList.clearSelection()
         for shape in added_shapes:
@@ -1298,6 +1348,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setDirty()
 
     def labelSelectionChanged(self):
+        # print('进入labelSelectionChanged')
         if self._noSelectionSlot:
             return
         if self.canvas.editing():
@@ -1314,12 +1365,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
 
     def labelOrderChanged(self):
+        # print('进入labelOrderChanged')
         self.setDirty()
         self.canvas.loadShapes([item.shape() for item in self.labelList])
 
     # Callback functions:
 
     def newShape(self):
+        # print('进入newShape')
         """Pop-up and give focus to the label editor.
 
         position MUST be in global coordinates.
@@ -1333,6 +1386,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self._config["display_label_popup"] or not text:
             previous_text = self.labelDialog.edit.text()
             text, flags, group_id,text_ch,text_dif,text_imgdif = self.labelDialog.popUp(text)
+            self.ch_name = text_ch
             if not text:
                 self.labelDialog.edit.setText(previous_text)
 
@@ -1345,18 +1399,20 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             text = ""
         if text:
+            # print(f'text_flags:{text,flags}')
             self.labelList.clearSelection()
             shape = self.canvas.setLastLabel(text, flags)
             shape.group_id = group_id
             shape.label_ch = text_ch
             shape.label_dif = text_dif
             shape.label_imgdif = text_imgdif
-
+            #print(shape.group_id,shape.label_ch,shape.label_dif,shape.label_imgdif)
             self.addLabel(shape)
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
             self.actions.undo.setEnabled(True)
             self.setDirty()
+            #print('已进入setDirty函数4')
         else:
             self.canvas.undoLastLine()
             self.canvas.shapesBackups.pop()
@@ -1446,6 +1502,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.brightnessContrast_values[self.filename] = (brightness, contrast)
 
     def togglePolygons(self, value):
+        # print('进入togglePolygons')
         for item in self.labelList:
             item.setCheckState(Qt.Checked if value else Qt.Unchecked)
 
@@ -1523,16 +1580,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.filename = filename
         if self._config["keep_prev"]:
             prev_shapes = self.canvas.shapes
+            # print(f"prev_shapes:{prev_shapes}")
         self.canvas.loadPixmap(QtGui.QPixmap.fromImage(image))
         flags = {k: False for k in self._config["flags"] or []}
         if self.labelFile:
-            self.loadLabels(self.labelFile.shapes)
+            #加载shapes(和json文件对应)和definition
+            definition = self.labelFile.definition
+            self.loadLabels(self.labelFile.shapes,definition=definition)
             if self.labelFile.flags is not None:
                 flags.update(self.labelFile.flags)
         self.loadFlags(flags)
         if self._config["keep_prev"] and self.noShapes():
             self.loadShapes(prev_shapes, replace=False)
             self.setDirty()
+            #print('已进入setDirty函数5')
         else:
             self.setClean()
         self.canvas.setEnabled(True)
@@ -1771,16 +1832,27 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def saveFile(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
-        if self.labelFile:
-            # DL20180323 - overwrite when in directory
-            self._saveFile(self.labelFile.filename)
-        elif self.output_file:
-            self._saveFile(self.output_file)
-            self.close()
-        else:
-            self._saveFile(self.saveFileDialog())
+        try:
+            if self.labelFile:
+                # DL20180323 - overwrite when in directory
+                self._saveFile(self.labelFile.filename)
+            elif self.output_file:
+                self._saveFile(self.output_file)
+                self.close()
+            else:
+                self._saveFile(self.saveFileDialog())
+        except:
+            self.errorMessage(
+                self.tr("操作错误|操作取消"),
+                self.tr(
+                    "如果是操作取消:请重新选择！"
+                    "其它情况:请删除框重新操作！"
+                ),
+
+            )
 
     def saveFileAs(self, _value=False):
+        #print('进入调用_saveFile函数的saveFileAs函数')
         assert not self.image.isNull(), "cannot save empty image"
         self._saveFile(self.saveFileDialog())
 
@@ -1819,6 +1891,8 @@ class MainWindow(QtWidgets.QMainWindow):
         return filename
 
     def _saveFile(self, filename):
+        #print('进去_saveFile函数')
+        #print('self.saveLabels(filename:',self.saveLabels(filename))
         if filename and self.saveLabels(filename):
             self.addRecentFile(filename)
             self.setClean()
@@ -1916,6 +1990,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.canvas.deleteShape(self.canvas.hShape)
             self.remLabels([self.canvas.hShape])
             self.setDirty()
+            #print('已进入setDirty函数6')
             if self.noShapes():
                 for action in self.actions.onShapesPresent:
                     action.setEnabled(False)
@@ -1931,20 +2006,24 @@ class MainWindow(QtWidgets.QMainWindow):
         ):
             self.remLabels(self.canvas.deleteSelected())
             self.setDirty()
+            #print('已进入setDirty函数7')
             if self.noShapes():
                 for action in self.actions.onShapesPresent:
                     action.setEnabled(False)
 
     def copyShape(self):
+        # print('进入copyShape')
         self.canvas.endMove(copy=True)
         self.labelList.clearSelection()
         for shape in self.canvas.selectedShapes:
             self.addLabel(shape)
         self.setDirty()
+        #print('已进入setDirty函数8')
 
     def moveShape(self):
         self.canvas.endMove(copy=False)
         self.setDirty()
+        #print('已进入setDirty函数9')
 
     def openDirDialog(self, _value=False, dirpath=None):
         if not self.mayContinue():

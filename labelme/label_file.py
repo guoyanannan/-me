@@ -125,8 +125,8 @@ class LabelFile(object):
             shapes = [
                 dict(
                     label=s["label"],
-                    label_ch=s["label_ch"],
-                    label_dif=s["label_dif"],
+                    label_ch=s["Chineselabel"],
+                    label_dif=s["difficult"],
                     points=s["points"],
                     shape_type=s.get("shape_type", "polygon"),
                     flags=s.get("flags", {}),
