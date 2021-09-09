@@ -55,9 +55,10 @@ class Shape(object):
         self.label = label
         self.group_id = group_id
         self.points = []
-        self.Chineselabel = None
-        self.difficult = None
+        self.chineselabel = None
+        self.confidence = None
         self.definition = None
+        self.obj_definition = None
         self.fill = False
         self.selected = False
         self.shape_type = shape_type

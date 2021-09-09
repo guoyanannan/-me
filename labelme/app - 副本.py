@@ -728,16 +728,9 @@ class MainWindow(QtWidgets.QMainWindow):
             "更新棒材类别列表",
         )
         sel5 = action(
-            "&铸坯",
-            self.getClsNameZP,
-            #shortcuts["close"],
-            "铸坯",
-            "更新连铸坯类别列表",
-        )
-        sel6=action(
             "&字符",
             self.getClsNameZF,
-            # shortcuts["close"],
+            #shortcuts["close"],
             "字符",
             "更新字符类别列表",
         )
@@ -750,7 +743,6 @@ class MainWindow(QtWidgets.QMainWindow):
                 sel3,
                 sel4,
                 sel5,
-                sel6,
             ),
         )
 
@@ -2126,22 +2118,6 @@ class MainWindow(QtWidgets.QMainWindow):
             ChiClsList = self.ChiCls,
         )
         # print("Pname_棒材")
-    #铸坯
-    def getClsNameZP(self):
-        self.EngCls = ['EngClsZP', 'EngClsZP1', 'EngClsZP2', 'EngClsZP3', 'EngClsZP4', 'EngClsZP5']
-        self.ChiCls = ['铸坯类别', '铸坯类别1', '铸坯类别2', '铸坯类别3', '铸坯类别4', '铸坯类别5']
-        self.labelDialog = LabelDialog(
-            parent=self,
-            labels=self._config["labels"],
-            sort_labels=self._config["sort_labels"],
-            show_text_field=self._config["show_label_text_field"],
-            completion=self._config["label_completion"],
-            fit_to_content=self._config["fit_to_content"],
-            flags=self._config["label_flags"],
-            EngClsList = self.EngCls,
-            ChiClsList = self.ChiCls,
-        )
-
     def getClsNameZF(self):
         self.EngCls = ['EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
         self.ChiCls = ['字符类别', '字符类别1', '字符类别2', '字符类别3', '字符类别4', '字符类别5']

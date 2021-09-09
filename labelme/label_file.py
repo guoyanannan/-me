@@ -80,8 +80,9 @@ class LabelFile(object):
         ]
         shape_keys = [
             "label",
-            "Chineselabel",
-            "difficult",
+            "chineselabel",
+            "confidence",
+            "definition",
             "points",
             "group_id",
             "shape_type",
@@ -125,8 +126,9 @@ class LabelFile(object):
             shapes = [
                 dict(
                     label=s["label"],
-                    label_ch=s["Chineselabel"],
-                    label_dif=s["difficult"],
+                    label_ch=s["chineselabel"],
+                    label_dif=s["confidence"],
+                    label_objdif=s["definition"],
                     points=s["points"],
                     shape_type=s.get("shape_type", "polygon"),
                     flags=s.get("flags", {}),
