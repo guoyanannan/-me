@@ -13,6 +13,8 @@ import glob
 import cv2
 import imgviz
 import numpy as np
+import xml.etree.ElementTree as ET
+from xml.dom.minidom import Document
 from PIL import Image,ImageDraw
 from qtpy import QtCore
 from qtpy import QtWidgets
@@ -518,7 +520,7 @@ def main():
                     ImgMat = ImagePath.split('/')[-1].split('.')[1]
                 ImagePIL = Image.open(ImagePath).convert('L') #w,h
                 data = json.load(open(JsonPath, 'r', encoding='utf8'))
-                mask_label = np.zeros(ImagePIL.size[::-1][:2], dtype=np.int32)  # w,h
+                mask_label = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8)  # w,h
                 mask = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8) #w,h
                 mask = Image.fromarray(mask)
                 shapeList = data['shapes']
@@ -537,7 +539,7 @@ def main():
                 if flag == 0:
                     image_index += 1
                     continue
-                #mask_label=img_as_ubyte(mask_label) #0-255
+                mask_label=img_as_ubyte(mask_label) #0-255
                 mask_label= imgviz.label2rgb(mask_label)
                 new_img_path = os.path.join(save_img_dir,ImgName+f'.{ImgMat}')
                 mask_label_path = os.path.join(save_msk_dir,ImgName+f'.{MskMat}')
@@ -549,7 +551,199 @@ def main():
                 QtWidgets.QApplication.processEvents()
                 time.sleep(0.05)
 
+        def GenVOCDate(self):
+            self.GetBBox(mold="VOC")
+        def GenYOLODate(self):
+            self.GetBBox(mold="YOLO")
 
+        def GetBBox(self,mold='VOC'):
+            JsonPaths, ImgPaths, PType = self.chackPath()
+            mold = mold
+            if mold =="VOC":
+                Save_dir = JsonPaths.replace('labels', 'VOCMoldData')
+                save_img_dir = os.path.join(Save_dir, "JPEGImages")
+                save_Ann_dir = os.path.join(Save_dir, "Annotations")
+                save_img_dir_back = os.path.join(Save_dir, "JPEGImagesBackground")
+                save_Ann_dir_back = os.path.join(Save_dir, "AnnotationsBackground")
+                label_mat = 'xml'
+            elif mold == "YOLO":
+                Save_dir = JsonPaths.replace('labels', 'YOLOMoldData')
+                save_img_dir = os.path.join(Save_dir, "Images")
+                save_Ann_dir = os.path.join(Save_dir, "Labels")
+                save_img_dir_back = os.path.join(Save_dir, "ImagesBackground")
+                save_Ann_dir_back = os.path.join(Save_dir, "LabelsBackground")
+                label_mat = 'txt'
+            if not os.path.exists(save_img_dir):
+                os.makedirs(save_img_dir)
+            if not os.path.exists(save_Ann_dir):
+                os.makedirs(save_Ann_dir)
+            if not os.path.exists(save_img_dir_back):
+                os.makedirs(save_img_dir_back)
+            if not os.path.exists(save_Ann_dir_back):
+                os.makedirs(save_Ann_dir_back)
+
+            if "板" in PType:
+                EngCls = ['background','EngClsBC', 'EngClsBC1', 'EngClsBC2', 'EngClsBC3', 'EngClsBC4', 'EngClsBC5']
+            elif "棒" in PType:
+                EngCls = ['background','EngClsCB', 'EngClsCB1', 'EngClsCB2', 'EngClsCB3', 'EngClsCB4', 'EngClsCB5']
+            elif "铸" in PType:
+                EngCls = ['background','EngClsZP', 'EngClsZP1', 'EngClsZP2', 'EngClsZP3', 'EngClsZP4', 'EngClsZP5']
+            elif "冷" in PType:
+                EngCls = ['background','EngClsLZ', 'EngClsLZ1', 'EngClsLZ2', 'EngClsLZ3', 'EngClsLZ4', 'EngClsLZ5']
+            elif "热" in PType:
+                EngCls = ['background','EngClsRZ', 'EngClsRZ1', 'EngClsRZ2', 'EngClsRZ3', 'EngClsRZ4', 'EngClsRZ5']
+            elif "符" in PType:
+                EngCls = ['background','EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
+            else:
+                QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
+                return
+            info ={}
+            info["classnames"] = EngCls
+            with open(os.path.join(Save_dir,'classnames.json'),'w',encoding='utf8') as f:
+                json.dump(info,f,indent=4,separators=(',', ': '))
+
+            total_num = len(os.listdir(JsonPaths))
+            image_index = 0
+            bk = 0
+            for JsonPath in glob.glob(JsonPaths + "/*.json"):
+                ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
+                # print(ImagePath)
+                if not os.path.exists(ImagePath):
+                    ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
+                if not os.path.exists(ImagePath):
+                    QtWidgets.QMessageBox.warning(self, '错误', "暂不支持非bmp和jpg格式图片！！", )
+                    bk += 1
+                if bk >= 1:
+                    break
+                if platform.system() == "Windows":
+                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
+                    ImgMat = ImagePath.split('\\')[-1].split('.')[1]
+                elif platform.system() == "Linux":
+                    ImgName = ImagePath.split('/')[-1].split('.')[0]
+                    ImgMat = ImagePath.split('/')[-1].split('.')[1]
+
+                #映射新路径
+                img_save_path_1 = os.path.join(save_img_dir,ImgName+f".{ImgMat}")
+                img_save_path_2 = os.path.join(save_img_dir_back,ImgName+f".{ImgMat}")
+                lal_save_path_1 = os.path.join(save_Ann_dir,ImgName+f".{label_mat}")
+                lal_save_path_2 = os.path.join(save_Ann_dir_back,ImgName+f".{label_mat}")
+
+                ImagePIL = Image.open(ImagePath).convert('L')  # w,h
+                img_name = ImgName+f".{ImgMat}"
+                data = json.load(open(JsonPath, 'r', encoding='utf8'))
+                shapeList = data['shapes']
+                box_info = []
+                for shape in shapeList:
+                    if shape['shape_type'] == 'rectangle':
+                        points = shape['points']
+                        x1,y1,x2,y2 = points[0][0],points[0][1],points[1][0],points[1][1]
+                        className = shape["label"]
+                        box_info.append([x1,y1,x2,y2,className])
+
+                if len(box_info) == 0:
+                    ImagePIL.save(img_save_path_2)
+                    lbl_file = open(lal_save_path_2,'w',encoding='utf8')
+                    lbl_file.close()
+                    image_index += 1
+                else:
+                    if mold == 'VOC':
+                        self.write_xml(ImagePIL,box_info,img_name,lal_save_path_1,img_save_path_1)
+                    elif mold == 'YOLO':
+                        self.write_txt(ImagePIL,box_info,lal_save_path_1,img_save_path_1,EngCls)
+                    image_index += 1
+
+                self.pbar.setValue(image_index / total_num * 100)
+                QtWidgets.QApplication.processEvents()
+                time.sleep(0.05)
+
+
+        def write_txt(self,img,boxes,txt_path,img_path,class_name):
+            #坐标转换
+            def convert(size, box):
+                dw = 1. / size[0]
+                dh = 1. / size[1]
+                x = (box[0] + box[1]) / 2.0
+                y = (box[2] + box[3]) / 2.0
+                w = box[1] - box[0]
+                h = box[3] - box[2]
+                x = x * dw
+                w = w * dw
+                y = y * dh
+                h = h * dh
+                return (x, y, w, h)
+
+            label_file = open(txt_path, 'w', encoding='utf-8')
+            sizee=img.size
+            for box in boxes:
+                cls = box[-1]
+                cls_id = class_name.index(cls)
+                bbox = [box[0],box[2],box[1],box[3]]
+                bb = convert(sizee,bbox)
+                label_file.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '\n')
+            label_file.close()
+            img.save(img_path)
+
+        def write_xml(self,img,boxes,img_name,xml_path,img_path):
+            # 创建xml函数
+            def create_xml_node(node_name, node_txt, node_object):
+                op = doc.createElement(str(node_name))
+                txt = doc.createTextNode(str(node_txt))
+                op.appendChild(txt)
+                node_object.appendChild(op)
+
+            def create_obj_node(box_label, xmin, ymin, xmax, ymax):
+                # 创建annotation下的子节点 object
+                object_info = doc.createElement('object')
+                annotation.appendChild(object_info)
+                # 创建annotation下的子节点name  并写入文本内容
+                create_xml_node('name', box_label, object_info)
+                # 创建annotation下的子节点difficult  并写入文本内容
+                create_xml_node('difficult', '0', object_info)
+                # 创建annotation下的子节点bndbox
+                bndbox = doc.createElement('bndbox')
+                object_info.appendChild(bndbox)
+                # 创建bndbox下的子节点xmin，创建xmin真实值的节点，将节点添加到父节点
+                create_xml_node('xmin', xmin, bndbox)
+                # ymin节点
+                create_xml_node('ymin', ymin, bndbox)
+                # xmax节点
+                create_xml_node('xmax', xmax, bndbox)
+                # ymax节点
+                create_xml_node('ymax', ymax, bndbox)
+
+            use_img_w, use_img_h = img.size
+            if img.mode is 'RGB':
+                use_img_depth = 3
+            else:
+                use_img_depth = 1
+
+
+            # write xml info
+            doc = Document()
+            annotation = doc.createElement('annotation')
+            doc.appendChild(annotation)
+            # filename
+            create_xml_node('filename', img_name, annotation)
+            # size
+            object_size = doc.createElement('size')
+            annotation.appendChild(object_size)
+            # width
+            create_xml_node('width', use_img_w, object_size)
+            # height
+            create_xml_node('height', use_img_h, object_size)
+            # depth
+            create_xml_node('depth', use_img_depth, object_size)
+
+            for ii in range(len(boxes)):
+                imgback_box = boxes[ii]
+                if imgback_box:
+                    xmin, ymin, xmax, ymax, label = imgback_box
+                    # write box info
+                    create_obj_node(label, int(xmin), int(ymin), int(xmax), int(ymax))
+
+            with open(xml_path, 'wb+') as f:
+                f.write(doc.toprettyxml(indent="\t", encoding='utf-8'))  # encoding='utf-8'
+            img.save(img_path)
 
         def renameFiles(self,dirPath,Mat,Ttime,Tname,Count):
             CountNow =Count
@@ -617,10 +811,10 @@ def main():
             ch_action.triggered.connect(self.GetInfo)
             cls_action = QtWidgets.QAction('分类格式', self)  # 创建对象
             cls_action.triggered.connect(self.GenClsData)
-            det_action = QtWidgets.QAction('检测格式', self)  # 创建对象
-            # new_action.triggered.connect(lambda: print("关机"))
+            det_action = QtWidgets.QAction('VOC格式', self)  # 创建对象
+            det_action.triggered.connect(self.GenVOCDate)
             yl_action = QtWidgets.QAction('YOLO格式', self)  # 创建对象
-            # new_action.triggered.connect(lambda: print("关机"))
+            yl_action.triggered.connect(self.GenYOLODate)
             seg_action = QtWidgets.QAction('分割格式', self)  # 创建对象
             seg_action.triggered.connect(self.GenSegData)
 
