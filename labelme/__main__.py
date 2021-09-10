@@ -400,6 +400,8 @@ def main():
 
         def GenClsData(self):
             JsonPaths,ImgPaths,_ = self.chackPath()
+            if not JsonPaths or not ImgPaths:
+                return
             Save_dir = JsonPaths.replace('labels', 'ClassifiedData')
             total_num = len(os.listdir(JsonPaths))
             image_index = 0
@@ -471,13 +473,18 @@ def main():
 
         def GenSegData(self):
             JsonPaths, ImgPaths,PType = self.chackPath()
+            if not JsonPaths or not ImgPaths:
+                return
             Save_dir = JsonPaths.replace('labels', 'SegmentationData')
             save_img_dir = os.path.join(Save_dir,"SegImages")
             save_msk_dir = os.path.join(Save_dir,"SegLabels")
+            save_msk_dir_rgb = os.path.join(Save_dir,"RGBSegLabels")
             if not os.path.exists(save_img_dir):
                 os.makedirs(save_img_dir)
             if not os.path.exists(save_msk_dir):
                 os.makedirs(save_msk_dir)
+            if not os.path.exists(save_msk_dir_rgb):
+                os.makedirs(save_msk_dir_rgb)
             if "板" in PType:
                 EngCls = ['background','EngClsBC', 'EngClsBC1', 'EngClsBC2', 'EngClsBC3', 'EngClsBC4', 'EngClsBC5']
             elif "棒" in PType:
@@ -503,7 +510,6 @@ def main():
             bk = 0
             for JsonPath in glob.glob(JsonPaths + "/*.json"):
                 ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
-                # print(ImagePath)
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
@@ -536,20 +542,19 @@ def main():
                         ImageDraw.Draw(mask).polygon(xy=xy, outline=1, fill=1)
                         mask_bool = np.array(mask,dtype=bool)
                         mask_label[mask_bool]=classIndex
-                if flag == 0:
-                    image_index += 1
-                    continue
-                mask_label=img_as_ubyte(mask_label) #0-255
-                mask_label= imgviz.label2rgb(mask_label)
-                new_img_path = os.path.join(save_img_dir,ImgName+f'.{ImgMat}')
-                mask_label_path = os.path.join(save_msk_dir,ImgName+f'.{MskMat}')
-                ImagePIL.save(new_img_path)
-                Image.fromarray(mask_label).save(mask_label_path)
-
+                if flag != 0:
+                    mask_label=img_as_ubyte(mask_label) #0-255
+                    mask_label_rgb= imgviz.label2rgb(mask_label)
+                    new_img_path = os.path.join(save_img_dir,ImgName+f'.{ImgMat}')
+                    mask_label_path = os.path.join(save_msk_dir,ImgName+f'.{MskMat}')
+                    mask_label_path_rgb = os.path.join(save_msk_dir_rgb,ImgName+f'.{MskMat}')
+                    ImagePIL.save(new_img_path)
+                    Image.fromarray(mask_label).save(mask_label_path)
+                    Image.fromarray(mask_label_rgb).save(mask_label_path_rgb)
                 image_index += 1
                 self.pbar.setValue(image_index / total_num * 100)
                 QtWidgets.QApplication.processEvents()
-                time.sleep(0.05)
+                # time.sleep(0.05)
 
         def GenVOCDate(self):
             self.GetBBox(mold="VOC")
@@ -558,6 +563,8 @@ def main():
 
         def GetBBox(self,mold='VOC'):
             JsonPaths, ImgPaths, PType = self.chackPath()
+            if not JsonPaths or not ImgPaths:
+                return
             mold = mold
             if mold =="VOC":
                 Save_dir = JsonPaths.replace('labels', 'VOCMoldData')

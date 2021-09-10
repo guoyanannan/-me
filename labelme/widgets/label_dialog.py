@@ -85,25 +85,26 @@ class LabelDialog(QtWidgets.QDialog):
         # 实例化QComBox对象->缺陷置信度
         self.cb2 = QtWidgets.QComboBox()
         # 单个条目
-        self.cb2.addItems(['1', '2', '3','4','5','6','7','8','9'])
+        self.cb2.addItems(['9', '8', '7','6','5','4','3','2','1'])
         self.cb2.currentIndexChanged.connect(self.postProcess)
         #
         # 实例化QComBox对象->缺陷清晰度
         self.cb3 = QtWidgets.QComboBox()
         # 单个条目
-        self.cb3.addItems(['1', '2', '3','4','5','6','7','8','9'])
+        self.cb3.addItems(['9', '8', '7','6','5','4','3','2','1'])
         self.cb3.currentIndexChanged.connect(self.postProcess)
         #
         # 实例化QComBox对象->整张图清晰度
         self.cb4 = QtWidgets.QComboBox()
         # 单个条目
-        self.cb4.addItems(['1', '2', '3','4','5','6','7','8','9'])
+        self.cb4.addItems(['9', '8', '7','6','5','4','3','2','1'])
         self.cb4.currentIndexChanged.connect(self.postProcess)
         #
         self.edit = LabelQLineEdit()
         self.edit.setPlaceholderText(text)
         self.edit.setValidator(labelme.utils.labelValidator())
         self.edit.editingFinished.connect(self.postProcess)
+
         #
         self.edit1 = LabelQLineEdit()
         self.edit1.setPlaceholderText(text1)
@@ -132,17 +133,26 @@ class LabelDialog(QtWidgets.QDialog):
             QtGui.QRegExpValidator(QtCore.QRegExp(r"\d*"), None)
         )
         layout = QtWidgets.QVBoxLayout()
+        # layout = QtWidgets.QHBoxLayout()
         # layout = QtWidgets.QFormLayout()
         if show_text_field:
-            '''
+            layout_1 = QtWidgets.QHBoxLayout()
             #原始文本框
-            layout_edit = QtWidgets.QVBoxLayout()
-            layout_edit.addWidget(self.edit, 12)
-            layout_edit.addWidget(self.edit1, 6)
-            layout_edit.addWidget(self.edit2, 2)
-            layout_edit.addWidget(self.edit3, 2)
-            layout_edit.addWidget(self.edit4, 2)
-            layout_edit.addWidget(self.edit_group_id, 2)
+            layout_edit_t = QtWidgets.QVBoxLayout()
+            self.edit.setFixedHeight(20)
+            self.edit1.setFixedHeight(20)
+            self.edit2.setFixedHeight(20)
+            self.edit3.setFixedHeight(20)
+            self.edit4.setFixedHeight(20)
+            layout_edit_t.addWidget(self.edit, 100)
+            layout_edit_t.addWidget(self.edit1, 100)
+            layout_edit_t.addWidget(self.edit2, 100)
+            layout_edit_t.addWidget(self.edit3, 100)
+            layout_edit_t.addWidget(self.edit4, 100)
+            # layout_edit.addWidget(self.edit_group_id, 2)
+
+
+            '''
             #下拉框
             # layout_edit.addWidget(self.cb, 2)
             layout.addLayout(layout_edit)
@@ -162,7 +172,9 @@ class LabelDialog(QtWidgets.QDialog):
             layout_edit.addRow("缺陷置信度：",self.cb2)
             layout_edit.addRow("缺陷清晰度：",self.cb3)
             layout_edit.addRow("整图清晰度：",self.cb4)
-            layout.addLayout(layout_edit)
+            layout_1.addLayout(layout_edit)
+            # layout_1.addLayout(layout_edit_t)
+            layout.addLayout(layout_1)
         # buttons
         self.buttonBox = bb = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel,
@@ -404,8 +416,8 @@ class LabelDialog(QtWidgets.QDialog):
             #text, flags, group_id,text_ch,text_dif,text_imgdif
             return self.edit.text(), self.getFlags(), self.getGroupId(),self.edit1.text(),text2,text3,text4
             '''
-            print("执行情况下英文名|标签|组|中文名|缺陷置信度|缺陷清晰度|整图清晰度|:")
-            print(self.cb.currentText(), self.getFlags(), self.getGroupId(), self.cb1.currentText(), self.cb2.currentText(), self.cb3.currentText(), self.cb4.currentText())
+            # print("执行情况下英文名|标签|组|中文名|缺陷置信度|缺陷清晰度|整图清晰度|:")
+            # print(self.cb.currentText(), self.getFlags(), self.getGroupId(), self.cb1.currentText(), self.cb2.currentText(), self.cb3.currentText(), self.cb4.currentText())
             return self.cb.currentText(), self.getFlags(), self.getGroupId(), self.cb1.currentText(), self.cb2.currentText(), self.cb3.currentText(), self.cb4.currentText()
         else:
             return None, None, None,None, None, None,None

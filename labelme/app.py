@@ -59,16 +59,14 @@ class MainWindow(QtWidgets.QMainWindow):
         output_dir=None,
     ):
         self.ch_name = None
-        self.EngClsOri = ['EngClsLZ', 'EngClsLZ1', 'EngClsLZ2', 'EngClsLZ3', 'EngClsLZ4', 'EngClsLZ5', 'EngClsRZ',
-                       'EngClsRZ1', 'EngClsRZ2', 'EngClsRZ3', 'EngClsRZ4', 'EngClsRZ5',
-                       'EngClsBC', 'EngClsBC1', 'EngClsBC2', 'EngClsBC3', 'EngClsBC4', 'EngClsBC5', 'EngClsCB',
-                       'EngClsCB1', 'EngClsCB2', 'EngClsCB3', 'EngClsCB4', 'EngClsCB5',
-                       'EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
-        self.ChiClsOri = ['冷轧类别', '冷轧类别1', '冷轧类别2', '冷轧类别3', '冷轧类别4', '冷轧类别5', '热轧类别', '热轧类别1', '热轧类别2', '热轧类别3', '热轧类别4',
-                       '热轧类别5',
-                       '板材类别', '板材类别1', '板材类别2', '板材类别3', '板材类别4', '板材类别5', '棒材类别', '棒材类别1', '棒材类别2', '棒材类别3', '棒材类别4',
-                       '棒材类别5',
-                       '字符类别', '字符类别1', '字符类别2', '字符类别3', '字符类别4', '字符类别5']
+        # self.EngClsOri = ['background','0','1','2','3','4','5','6','7','8','9',
+        #                   'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+        #                   'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+        #                   '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+        #                   'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+        #                   'u','v','w','x','y','z']
+        self.EngClsOri = ['background','EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
+        self.ChiClsOri = ['背景','字符类别', '字符类别1', '字符类别2', '字符类别3', '字符类别4', '字符类别5']
         if output is not None:
             logger.warning(
                 "argument output is deprecated, use output_file instead"
@@ -306,6 +304,7 @@ class MainWindow(QtWidgets.QMainWindow):
             enabled=True,
         )
         saveAuto.setChecked(self._config["auto_save"])
+
 
         saveWithImageData = action(
             # text="Save With Image Data",
@@ -1843,6 +1842,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def enableSaveImageWithData(self, enabled):
         self._config["store_data"] = enabled
         self.actions.saveWithImageData.setChecked(enabled)
+        print('enabled：',enabled)
 
     def closeEvent(self, event):
         if not self.mayContinue():
