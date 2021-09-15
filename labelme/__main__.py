@@ -486,17 +486,50 @@ def main():
             if not os.path.exists(save_msk_dir_rgb):
                 os.makedirs(save_msk_dir_rgb)
             if "板" in PType:
-                EngCls = ['background','EngClsBC', 'EngClsBC1', 'EngClsBC2', 'EngClsBC3', 'EngClsBC4', 'EngClsBC5']
+                EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
+                       'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
+                       'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
+                       'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
+                       'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
+                       ]
             elif "棒" in PType:
-                EngCls = ['background','EngClsCB', 'EngClsCB1', 'EngClsCB2', 'EngClsCB3', 'EngClsCB4', 'EngClsCB5']
+                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                       'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
+                       'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
+                       ]
             elif "铸" in PType:
-                EngCls = ['background','EngClsZP', 'EngClsZP1', 'EngClsZP2', 'EngClsZP3', 'EngClsZP4', 'EngClsZP5']
+                EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
+                       'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
+                       ]
             elif "冷" in PType:
-                EngCls = ['background','EngClsLZ', 'EngClsLZ1', 'EngClsLZ2', 'EngClsLZ3', 'EngClsLZ4', 'EngClsLZ5']
+                EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
+                       'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
+                       'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
+                       'AoKeng','BianSiLaRu','ZaoShang','TingJiWenLi','ZaoShangFenSuan','JianDuanReZhaGuaShang',
+                       'SuanYinHuLue','XianXingJiaZa','YanZhongYangHuaPiTuoLuoHen','YaHen','YangHuaPiTuoLuoHenHuLue','HanFeng',
+                       'CengJianCaShang','CengJianCaShangYi','ErLeiReZhaGuaShang','LieBian','ShuiYin','BianBuHuLue',
+                       ]
             elif "热" in PType:
-                EngCls = ['background','EngClsRZ', 'EngClsRZ1', 'EngClsRZ2', 'EngClsRZ3', 'EngClsRZ4', 'EngClsRZ5']
+                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                       'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                       ]
             elif "符" in PType:
-                EngCls = ['background','EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
+                EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
+                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                          'u','v','w','x','y','z']
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
@@ -590,17 +623,52 @@ def main():
                 os.makedirs(save_Ann_dir_back)
 
             if "板" in PType:
-                EngCls = ['background','EngClsBC', 'EngClsBC1', 'EngClsBC2', 'EngClsBC3', 'EngClsBC4', 'EngClsBC5']
+                EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
+                          'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
+                          'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
+                          'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
+                          'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
+                          ]
             elif "棒" in PType:
-                EngCls = ['background','EngClsCB', 'EngClsCB1', 'EngClsCB2', 'EngClsCB3', 'EngClsCB4', 'EngClsCB5']
+                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                          'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                          'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                          'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                          'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                          'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                          'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
+                          'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
+                          ]
             elif "铸" in PType:
-                EngCls = ['background','EngClsZP', 'EngClsZP1', 'EngClsZP2', 'EngClsZP3', 'EngClsZP4', 'EngClsZP5']
+                EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
+                          'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
+                          ]
             elif "冷" in PType:
-                EngCls = ['background','EngClsLZ', 'EngClsLZ1', 'EngClsLZ2', 'EngClsLZ3', 'EngClsLZ4', 'EngClsLZ5']
+                EngCls = ['BeiJing', 'ZhengMianQueXian', 'ErLeiTuoPi', 'ErLeiTuoPiYi', 'YiWuYaRu', 'XiuDian',
+                          'BaHen', 'SuanYin', 'BianBuZhaXiu', 'TuoPi', 'BaoGuangSeCha', 'ReZhaGuaShang',
+                          'YangHuaPiTuoLuoHen', 'TuiXiGuaShang', 'HeiDai', 'SuanXiBuZu', 'ReGunYin', 'ZangWu',
+                          'AoKeng', 'BianSiLaRu', 'ZaoShang', 'TingJiWenLi', 'ZaoShangFenSuan', 'JianDuanReZhaGuaShang',
+                          'SuanYinHuLue', 'XianXingJiaZa', 'YanZhongYangHuaPiTuoLuoHen', 'YaHen',
+                          'YangHuaPiTuoLuoHenHuLue', 'HanFeng',
+                          'CengJianCaShang', 'CengJianCaShangYi', 'ErLeiReZhaGuaShang', 'LieBian', 'ShuiYin',
+                          'BianBuHuLue',
+                          ]
             elif "热" in PType:
-                EngCls = ['background','EngClsRZ', 'EngClsRZ1', 'EngClsRZ2', 'EngClsRZ3', 'EngClsRZ4', 'EngClsRZ5']
+                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                          'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                          'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                          'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                          'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                          'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                          'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                          ]
             elif "符" in PType:
-                EngCls = ['background','EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
+                EngCls = ['BeiJing', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                          'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'G', 'K', 'L', 'M', 'N',
+                          'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '@',
+                          '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 'a', 'b', 'c', 'd', 'e',
+                          'f', 'g', 'h', 'i', 'g', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+                          'u', 'v', 'w', 'x', 'y', 'z']
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return

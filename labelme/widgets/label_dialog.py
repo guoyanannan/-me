@@ -30,14 +30,14 @@ class LabelQLineEdit(QtWidgets.QLineEdit):
 class LabelDialog(QtWidgets.QDialog):
     def __init__(
         self,
-        # text="Enter object label",
-        text="请输入缺陷类别名<英文或拼音,必填项!!!!!!>",
-        text1='请输入中文类别名,选填',
-        text2='请输入缺陷的置信度,选填,<范围1至9,值越大确认度越高>',
-        text3='请输入缺陷的清晰度,选填,<范围1至9,值越大清晰度越高>',
-        text4='请输入整幅图的清晰度,选填,<范围1至9,值越大清晰度越高>',
-        # text3='请输入整幅图的清晰度,选填,<范围1至9,值越大清晰度越高>',
-        # text4='请输入缺陷的清晰度,选填,<范围1至9,值越大清晰度越高>',
+        # # text="Enter object label",
+        # text="请输入缺陷类别名<英文或拼音,必填项!!!!!!>",
+        # text1='请输入中文类别名,选填',
+        # text2='请输入缺陷的置信度,选填,<范围1至9,值越大确认度越高>',
+        # text3='请输入缺陷的清晰度,选填,<范围1至9,值越大清晰度越高>',
+        # text4='请输入整幅图的清晰度,选填,<范围1至9,值越大清晰度越高>',
+        # # text3='请输入整幅图的清晰度,选填,<范围1至9,值越大清晰度越高>',
+        # # text4='请输入缺陷的清晰度,选填,<范围1至9,值越大清晰度越高>',
 
         parent=None,
         labels=None,
@@ -49,14 +49,7 @@ class LabelDialog(QtWidgets.QDialog):
         EngClsList=[],
         ChiClsList=[],
     ):
-        '''
-                self.EngCls = ['EngClsLZ','EngClsLZ1','EngClsLZ2','EngClsLZ3','EngClsLZ4','EngClsLZ5','EngClsRZ', 'EngClsRZ1', 'EngClsRZ2', 'EngClsRZ3', 'EngClsRZ4', 'EngClsRZ5',
-                       'EngClsBC', 'EngClsBC1', 'EngClsBC2', 'EngClsBC3', 'EngClsBC4', 'EngClsBC5','EngClsCB', 'EngClsCB1', 'EngClsCB2', 'EngClsCB3', 'EngClsCB4', 'EngClsCB5',
-                       'EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
-                self.ChiCls = ['冷轧类别', '冷轧类别1', '冷轧类别2', '冷轧类别3', '冷轧类别4', '冷轧类别5','热轧类别', '热轧类别1', '热轧类别2', '热轧类别3', '热轧类别4', '热轧类别5',
-                       '板材类别', '板材类别1', '板材类别2', '板材类别3', '板材类别4', '板材类别5','棒材类别', '棒材类别1', '棒材类别2', '棒材类别3', '棒材类别4', '棒材类别5',
-                       '字符类别', '字符类别1', '字符类别2', '字符类别3', '字符类别4', '字符类别5']
-        '''
+
         if fit_to_content is None:
             fit_to_content = {"row": False, "column": True}
         #fit_to_content = {"row": True, "column": False}
@@ -81,6 +74,7 @@ class LabelDialog(QtWidgets.QDialog):
         # self.cb1.addItems(['类别1', '类别2', '类别3'])
         self.cb1.addItems(self.chi_list)
         self.cb1.currentIndexChanged.connect(self.postProcess)
+        self.cb1.activated.connect(lambda: self.to_comboBox_1(self.cb1.currentText()))
         #
         # 实例化QComBox对象->缺陷置信度
         self.cb2 = QtWidgets.QComboBox()
@@ -99,33 +93,35 @@ class LabelDialog(QtWidgets.QDialog):
         # 单个条目
         self.cb4.addItems(['9', '8', '7','6','5','4','3','2','1'])
         self.cb4.currentIndexChanged.connect(self.postProcess)
-        #
+
+        #输入框
         self.edit = LabelQLineEdit()
-        self.edit.setPlaceholderText(text)
+        #self.edit.setPlaceholderText(text)
         self.edit.setValidator(labelme.utils.labelValidator())
         self.edit.editingFinished.connect(self.postProcess)
 
         #
         self.edit1 = LabelQLineEdit()
-        self.edit1.setPlaceholderText(text1)
+        #self.edit1.setPlaceholderText(text1)
         self.edit1.setValidator(labelme.utils.labelValidator())
         self.edit1.editingFinished.connect(self.postProcess)
         #
         self.edit2 = LabelQLineEdit()
-        self.edit2.setPlaceholderText(text2)
+        #self.edit2.setPlaceholderText(text2)
         self.edit2.setValidator(labelme.utils.labelValidator())
-        self.edit2.editingFinished.connect(self.postProcess)
+        self.edit2.editingFinished.connect(self.postProcess_three)
         #
         self.edit3 = LabelQLineEdit()
-        self.edit3.setPlaceholderText(text3)
+        #self.edit3.setPlaceholderText(text3)
         self.edit3.setValidator(labelme.utils.labelValidator())
-        self.edit3.editingFinished.connect(self.postProcess)
+        self.edit3.editingFinished.connect(self.postProcess_three)
         #
         self.edit4 = LabelQLineEdit()
-        self.edit4.setPlaceholderText(text4)
+        #self.edit4.setPlaceholderText(text4)
         self.edit4.setValidator(labelme.utils.labelValidator())
-        self.edit4.editingFinished.connect(self.postProcess)
+        self.edit4.editingFinished.connect(self.postProcess_three)
         if flags:
+            print('flags:',flags)
             self.edit.textChanged.connect(self.updateFlags)
         self.edit_group_id = QtWidgets.QLineEdit()
         self.edit_group_id.setPlaceholderText("Group ID,选填项,用于分组！！！")
@@ -133,8 +129,7 @@ class LabelDialog(QtWidgets.QDialog):
             QtGui.QRegExpValidator(QtCore.QRegExp(r"\d*"), None)
         )
         layout = QtWidgets.QVBoxLayout()
-        # layout = QtWidgets.QHBoxLayout()
-        # layout = QtWidgets.QFormLayout()
+
         if show_text_field:
             layout_1 = QtWidgets.QHBoxLayout()
             #原始文本框
@@ -144,11 +139,11 @@ class LabelDialog(QtWidgets.QDialog):
             self.edit2.setFixedHeight(20)
             self.edit3.setFixedHeight(20)
             self.edit4.setFixedHeight(20)
-            layout_edit_t.addWidget(self.edit, 100)
-            layout_edit_t.addWidget(self.edit1, 100)
-            layout_edit_t.addWidget(self.edit2, 100)
-            layout_edit_t.addWidget(self.edit3, 100)
-            layout_edit_t.addWidget(self.edit4, 100)
+            layout_edit_t.addWidget(self.edit, 2)
+            layout_edit_t.addWidget(self.edit1, 2)
+            layout_edit_t.addWidget(self.edit2, 2)
+            layout_edit_t.addWidget(self.edit3, 2)
+            layout_edit_t.addWidget(self.edit4, 2)
             # layout_edit.addWidget(self.edit_group_id, 2)
 
 
@@ -173,7 +168,7 @@ class LabelDialog(QtWidgets.QDialog):
             layout_edit.addRow("缺陷清晰度：",self.cb3)
             layout_edit.addRow("整图清晰度：",self.cb4)
             layout_1.addLayout(layout_edit)
-            # layout_1.addLayout(layout_edit_t)
+            layout_1.addLayout(layout_edit_t)
             layout.addLayout(layout_1)
         # buttons
         self.buttonBox = bb = QtWidgets.QDialogButtonBox(
@@ -252,6 +247,9 @@ class LabelDialog(QtWidgets.QDialog):
     def to_comboBox_2(self, text):
         self.cb1.setCurrentText(self.chi_list[self.eng_list.index(text)])
 
+    def to_comboBox_1(self, text):
+        self.cb.setCurrentText(self.eng_list[self.chi_list.index(text)])
+
     def validate(self):
         # text = self.edit.text()
         text = self.cb.currentText()
@@ -265,16 +263,83 @@ class LabelDialog(QtWidgets.QDialog):
     def labelDoubleClicked(self, item):
         self.validate()
 
+    def postProcess_three(self):
+        #print('进入postProcess_three函数')
+        list_cb = [self.cb2,self.cb3,self.cb4,]
+        list_edit = [self.edit2,self.edit3,self.edit4]
+        for i in range(len(list_edit)):
+            op_e = list_edit[i]
+            if op_e.text():
+                text = op_e.text()
+                if hasattr(text, "strip"):
+                    text = text.strip()
+                else:
+                    text = text.trimmed()
+                if text in ['9', '8', '7','6','5','4','3','2','1']:
+                    op_e.setText(text)
+                    list_cb[i].setCurrentText(text)
+                else:
+                    op_e.setText('')
+                    QtWidgets.QMessageBox.warning(self, '错误', f"{text}不在范围1-9之内,请重新输入，否则默认左边值！！！！", )
+
+
     def postProcess(self):
-        # text = self.edit.text()
-        text = self.cb.currentText()
-        #print('复合框：',text)
-        if hasattr(text, "strip"):
-            text = text.strip()
+        #print('进入postProcess函数')
+        #print(str(self.edit.text()))
+        if str(self.edit.text()):
+            text = self.edit.text()
+            if hasattr(text, "strip"):
+                text = text.strip()
+            else:
+                text = text.trimmed()
+            if text in self.eng_list:
+                chi_text = self.chi_list[self.eng_list.index(text)]
+                self.edit.setText(text)
+                self.edit.setSelection(0, len(text))
+                self.edit1.setText(chi_text)
+                self.edit1.setSelection(0, len(chi_text))
+                self.cb.setCurrentText(text)
+                self.cb1.setCurrentText(chi_text)
+            else:
+                self.edit.setText('')
+                self.edit1.setText('')
+                QtWidgets.QMessageBox.warning(self, '错误', f"{text}不是定义的类别，请重新输入！！！", )
+                # text = self.cb.currentText()
+                # if hasattr(text, "strip"):
+                #     text = text.strip()
+                # else:
+                #     text = text.trimmed()
+
+
         else:
-            text = text.trimmed()
+            if self.edit1.text():
+                if self.edit1.text() in self.chi_list:
+                    text1 = self.edit1.text()
+                    text = self.eng_list[self.chi_list.index(text1)]
+                    self.edit1.setText(text1)
+                    self.edit.setText(text)
+                    self.cb.setCurrentText(text)
+                    self.cb1.setCurrentText(text1)
+                else:
+                    self.edit1.setText('')
+                    QtWidgets.QMessageBox.warning(self, '错误', f"{self.edit1.text()}不是定义的类别！！！", )
+
+            else:
+                text = self.cb.currentText()
+                if hasattr(text, "strip"):
+                    text = text.strip()
+                else:
+                    text = text.trimmed()
+                self.cb.setCurrentText(text)
+        # text = self.edit.text()
+        #text = self.cb.currentText()
+        #print('复合框：',text)
+        # if hasattr(text, "strip"):
+        #     text = text.strip()
+        # else:
+        #     text = text.trimmed()
         # self.edit.setText(text)
-        self.cb.setCurrentText(text)
+        # self.cb.setCurrentText(text)
         #print('是否添加成功耶：',bool(self.cb.setCurrentText(text)))
 
     def updateFlags(self, label_new):
@@ -334,6 +399,7 @@ class LabelDialog(QtWidgets.QDialog):
             )
         # if text is None, the previous label in self.edit is kept
         if text is None:
+            #print('text是None时text的值:', text)
             '''
             #origin
             text = self.edit.text()
@@ -342,6 +408,11 @@ class LabelDialog(QtWidgets.QDialog):
             text3 = self.edit3.text()
             text4 = self.edit4.text()
             '''
+            #is_use_edit = False
+            #编辑框设置图像清晰度等默认值
+            self.edit2.setText('9')
+            self.edit3.setText('9')
+            self.edit4.setText('9')
             #下拉框
             text = self.cb.currentText()
             text1 = self.cb1.currentText()
@@ -351,6 +422,7 @@ class LabelDialog(QtWidgets.QDialog):
             #print('text是None时text01234的值:',text,text1,text2,text3,text4)
 
         else:
+            #print('文本框不为空时')
             '''
             text = text
             text1 = text_ch
@@ -361,35 +433,56 @@ class LabelDialog(QtWidgets.QDialog):
             text5 = self.cb.currentText()
             print("下拉框选择值》》》", text5)
             '''
-            #下拉框
-            text = text
-            text1 = text_ch
-            text2 = text_dif
-            text3 = text_objdif
-            text4 = text_imgdif
+            # #下拉框
+            # text = text
+            # text1 = text_ch
+            # text2 = text_dif
+            # text3 = text_objdif
+            # text4 = text_imgdif
+            #is_use_edit = True
+
+            text = self.edit.text()
+            #print('text:',text)
+            if text:
+                text1 = self.edit1.text()
+                text2 = self.edit2.text()
+                text3 = self.edit3.text()
+                text4 = self.edit4.text()
+                #print(text, text1, text2, text3, text4)
+            else:
+                #is_use_edit = False
+                self.edit2.setText('9')
+                self.edit3.setText('9')
+                self.edit4.setText('9')
+                #print('info：',self.edit.text(),self.edit1.text(),self.edit2.text(),self.edit3.text(),self.edit4.text(),)
+
+
+
         if flags:
             self.setFlags(flags)
         else:
             self.resetFlags(text)
+        # if True:
+        #     print('进入文本框赋值!!')
+        #     self.edit.setText(text)
+        #     self.edit.setSelection(0, len(text))
+        #     #Chinese
+        #     self.edit1.setText(str(text1))
+        #     #self.edit1.setSelection(0, len(text1))
+        #     #difficult
+        #     self.edit2.setText(str(text2))
+        #     #self.edit2.setSelection(0, len(text2))
+        #     #definition
+        #     self.edit3.setText(str(text3))
+        #     self.edit4.setText(str(text4))
+        #     #self.edit3.setSelection(0, len(text3))
+        #     if group_id is None:
+        #         self.edit_group_id.clear()
+        #     else:
+        #         self.edit_group_id.setText(str(group_id))
 
-        self.edit.setText(text)
-        self.edit.setSelection(0, len(text))
-        #Chinese
-        self.edit1.setText(str(text1))
-        #self.edit1.setSelection(0, len(text1))
-        #difficult
-        self.edit2.setText(str(text2))
-        #self.edit2.setSelection(0, len(text2))
-        #definition
-        self.edit3.setText(str(text3))
-        self.edit4.setText(str(text4))
-        #self.edit3.setSelection(0, len(text3))
-        if group_id is None:
-            self.edit_group_id.clear()
-        else:
-            self.edit_group_id.setText(str(group_id))
-
-        items = self.labelList.findItems(text, QtCore.Qt.MatchFixedString)
+        # items = self.labelList.findItems(text, QtCore.Qt.MatchFixedString)
+        items = False
         if items:
             if len(items) != 1:
                 logger.warning("Label list has duplicate '{}'".format(text))

@@ -59,14 +59,18 @@ class MainWindow(QtWidgets.QMainWindow):
         output_dir=None,
     ):
         self.ch_name = None
-        # self.EngClsOri = ['background','0','1','2','3','4','5','6','7','8','9',
-        #                   'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
-        #                   'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
-        #                   '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
-        #                   'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
-        #                   'u','v','w','x','y','z']
-        self.EngClsOri = ['background','EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
-        self.ChiClsOri = ['背景','字符类别', '字符类别1', '字符类别2', '字符类别3', '字符类别4', '字符类别5']
+        self.EngClsOri = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
+                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                          'u','v','w','x','y','z']
+        self.ChiClsOri = ['背景','0','1','2','3','4','5','6','7','8','9',
+                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                          'u','v','w','x','y','z']
         if output is not None:
             logger.warning(
                 "argument output is deprecated, use output_file instead"
@@ -690,55 +694,52 @@ class MainWindow(QtWidgets.QMainWindow):
             file=self.menu(self.tr("&文件")),
             edit=self.menu(self.tr("&编辑")),
             view=self.menu(self.tr("&视图")),
-            help=self.menu(self.tr("&帮助")),
+            # help=self.menu(self.tr("&帮助")),
             select=self.menu(self.tr("产品类型")),
             # recentFiles=QtWidgets.QMenu(self.tr("Open &Recent")),
             recentFiles=QtWidgets.QMenu(self.tr("&最近打开")),
             labelList=labelMenu,
         )
-        self.EngCls,self.ChiCls =[],[]
+
         #按钮
         sel1 = action(
             "&冷轧",
             self.getClsNameLZ,
-            #shortcuts["close"],
-            "冷轧",
             "更新冷轧类别列表",
+            # checkable=True,
+            # icon="done",
+            checkable=True,
+
         )
         sel2 = action(
             "&热轧",
             self.getClsNameRZ,
-            #shortcuts["close"],
-            "热轧",
             "更新热轧类别列表",
+            checkable=True,
         )
         sel3 = action(
             "&板材",
             self.getClsNameBC,
-            #shortcuts["close"],
-            "板材",
             "更新板材类别列表",
+            checkable=True,
         )
         sel4 = action(
             "&棒材",
             self.getClsNameCB,
-            #shortcuts["close"],
-            "棒材",
             "更新棒材类别列表",
+            checkable=True,
         )
         sel5 = action(
             "&铸坯",
             self.getClsNameZP,
-            #shortcuts["close"],
-            "铸坯",
             "更新连铸坯类别列表",
+            checkable=True,
         )
         sel6=action(
             "&字符",
             self.getClsNameZF,
-            # shortcuts["close"],
-            "字符",
             "更新字符类别列表",
+            checkable=True,
         )
         #产品类型
         utils.addActions(
@@ -772,7 +773,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 quit,
             ),
         )
-        utils.addActions(self.menus.help, (help,))
+        # utils.addActions(self.menus.help, (help,))
         utils.addActions(
             self.menus.view,
             (
@@ -1842,7 +1843,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def enableSaveImageWithData(self, enabled):
         self._config["store_data"] = enabled
         self.actions.saveWithImageData.setChecked(enabled)
-        print('enabled：',enabled)
 
     def closeEvent(self, event):
         if not self.mayContinue():
@@ -1919,7 +1919,11 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.filename is None:
             filename = self.imageList[0]
         else:
-            currIndex = self.imageList.index(self.filename)
+            try:
+                currIndex = self.imageList.index(self.filename)
+            except:
+                #print(self.filename)
+                currIndex = -1
             if currIndex + 1 < len(self.imageList):
                 filename = self.imageList[currIndex + 1]
             else:
@@ -2067,8 +2071,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.actions.saveAs.setEnabled(False)
 
     def getClsNameLZ(self):
-        self.EngCls = ['EngClsLZ','EngClsLZ1','EngClsLZ2','EngClsLZ3','EngClsLZ4','EngClsLZ5']
-        self.ChiCls = ['冷轧类别','冷轧类别1','冷轧类别2','冷轧类别3','冷轧类别4','冷轧类别5']
+        self.EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
+                       'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
+                       'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
+                       'AoKeng','BianSiLaRu','ZaoShang','TingJiWenLi','ZaoShangFenSuan','JianDuanReZhaGuaShang',
+                       'SuanYinHuLue','XianXingJiaZa','YanZhongYangHuaPiTuoLuoHen','YaHen','YangHuaPiTuoLuoHenHuLue','HanFeng',
+                       'CengJianCaShang','CengJianCaShangYi','ErLeiReZhaGuaShang','LieBian','ShuiYin','BianBuHuLue',
+                       ]
+        self.ChiCls = ['背景','整面缺陷','二类脱皮','二类脱皮一','异物压入','锈点',
+                       '疤痕','酸印','边部轧锈','脱皮','曝光色差','热轧刮伤',
+                       '氧化皮脱落痕','退洗刮伤','黑带','酸洗不足','热辊印','脏污',
+                       '凹坑','边丝拉入','凿伤','停机纹理','凿伤分散','间断热轧刮伤',
+                       '酸印忽略','线性夹杂','严重氧化皮脱落痕','压痕','氧化皮脱落痕忽略','焊缝',
+                       '层间擦伤','层间擦伤一','二类热轧刮伤','裂边','水印','边部忽略',
+                       ]
         self.labelDialog = LabelDialog(
             parent=self,
             labels=self._config["labels"],
@@ -2082,8 +2098,22 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         #print("Pname_冷轧")
     def getClsNameRZ(self):
-        self.EngCls = ['EngClsRZ', 'EngClsRZ1', 'EngClsRZ2', 'EngClsRZ3', 'EngClsRZ4', 'EngClsRZ5']
-        self.ChiCls = ['热轧类别', '热轧类别1', '热轧类别2', '热轧类别3', '热轧类别4', '热轧类别5']
+        self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                       'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                       ]
+        self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
+                       '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
+                       '亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
+                       '振痕', '片状铁鳞', '波形', '水滴', '水雾', '水印',
+                       '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
+                       '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
+                       '边缘毛刺', '过曝光', '锈皮脱落', '擦疤', '背景七', '背景八',
+                       ]
         self.labelDialog = LabelDialog(
             parent=self,
             labels=self._config["labels"],
@@ -2097,8 +2127,18 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         #print("Pname_热轧")
     def getClsNameBC(self):
-        self.EngCls = ['EngClsBC', 'EngClsBC1', 'EngClsBC2', 'EngClsBC3', 'EngClsBC4', 'EngClsBC5']
-        self.ChiCls = ['板材类别', '板材类别1', '板材类别2', '板材类别3', '板材类别4', '板材类别5']
+        self.EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
+                       'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
+                       'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
+                       'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
+                       'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
+                       ]
+        self.ChiCls = ['待分类', '纵向裂纹', '横向裂纹', '边裂', '水印', '辊印',
+                       '压坑', '翘皮', '线性缺陷', '划伤', '压痕', '水滴',
+                       '屏蔽边部', '屏蔽头尾', '背景一', '背景二', '背景三', '背景四',
+                       '背景五', '背景六', '背景七', '背景八', '麻点', '异物压入',
+                       '水纹', '结疤', '氧化铁皮', '线性缺陷一', '疑似异物压入',
+                       ]
         self.labelDialog = LabelDialog(
             parent=self,
             labels=self._config["labels"],
@@ -2112,8 +2152,24 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         # print("Pname_板材")
     def getClsNameCB(self):
-        self.EngCls = ['EngClsCB', 'EngClsCB1', 'EngClsCB2', 'EngClsCB3', 'EngClsCB4', 'EngClsCB5']
-        self.ChiCls = ['棒材类别', '棒材类别1', '棒材类别2', '棒材类别3', '棒材类别4', '棒材类别5']
+        self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                       'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
+                       'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
+                       ]
+        self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
+                       '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
+                       '亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
+                       '振痕', '片状铁鳞', '波形', '水滴', '水雾', '水印',
+                       '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
+                       '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
+                       '背景七', '边缘毛刺', '过曝光', '背景八', '背景九', '背景十',
+                       '背景十一', '锈皮脱落', '凹坑', '耳朵', '划伤', '背景',
+                       ]
         self.labelDialog = LabelDialog(
             parent=self,
             labels=self._config["labels"],
@@ -2128,8 +2184,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # print("Pname_棒材")
     #铸坯
     def getClsNameZP(self):
-        self.EngCls = ['EngClsZP', 'EngClsZP1', 'EngClsZP2', 'EngClsZP3', 'EngClsZP4', 'EngClsZP5']
-        self.ChiCls = ['铸坯类别', '铸坯类别1', '铸坯类别2', '铸坯类别3', '铸坯类别4', '铸坯类别5']
+        self.EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
+                       'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
+                       ]
+        self.ChiCls = ['背景', '纵向裂纹', '横向裂纹', '划伤', '水渣印', '辊印',
+                       '渣皮', '切割开口', '停止线', '擦划伤', '端面焊渣', '接痕',
+                       ]
         self.labelDialog = LabelDialog(
             parent=self,
             labels=self._config["labels"],
@@ -2143,8 +2203,18 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def getClsNameZF(self):
-        self.EngCls = ['EngClsZF', 'EngClsZF1', 'EngClsZF2', 'EngClsZF3', 'EngClsZF4', 'EngClsZF5']
-        self.ChiCls = ['字符类别', '字符类别1', '字符类别2', '字符类别3', '字符类别4', '字符类别5']
+        self.EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
+                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                          'u','v','w','x','y','z']
+        self.ChiCls = ['背景','0','1','2','3','4','5','6','7','8','9',
+                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                          'u','v','w','x','y','z']
         self.labelDialog = LabelDialog(
             parent=self,
             labels=self._config["labels"],
