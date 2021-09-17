@@ -399,8 +399,56 @@ def main():
                 return JsonPaths,ImgPaths,Ptyoe
 
         def GenClsData(self):
-            JsonPaths,ImgPaths,_ = self.chackPath()
+            JsonPaths,ImgPaths,PType = self.chackPath()
             if not JsonPaths or not ImgPaths:
+                return
+            if "板" in PType:
+                EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
+                       'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
+                       'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
+                       'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
+                       'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
+                       ]
+            elif "棒" in PType:
+                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                       'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
+                       'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
+                       ]
+            elif "铸" in PType:
+                EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
+                       'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
+                       ]
+            elif "冷" in PType:
+                EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
+                       'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
+                       'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
+                       'AoKeng','BianSiLaRu','ZaoShang','TingJiWenLi','ZaoShangFenSuan','JianDuanReZhaGuaShang',
+                       'SuanYinHuLue','XianXingJiaZa','YanZhongYangHuaPiTuoLuoHen','YaHen','YangHuaPiTuoLuoHenHuLue','HanFeng',
+                       'CengJianCaShang','CengJianCaShangYi','ErLeiReZhaGuaShang','LieBian','ShuiYin','BianBuHuLue',
+                       ]
+            elif "热" in PType:
+                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                       'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                       ]
+            elif "符" in PType:
+                EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
+                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                          'u','v','w','x','y','z']
+            else:
+                QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
             Save_dir = JsonPaths.replace('labels', 'ClassifiedData')
             total_num = len(os.listdir(JsonPaths))
@@ -412,10 +460,15 @@ def main():
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json','jpg').replace('labels','images')
                 if not os.path.exists(ImagePath):
-                    QtWidgets.QMessageBox.warning(self, '错误', "暂不支持非bmp和jpg格式图片！！",)
-                    bk +=1
-                if bk>=1:
-                    break
+                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
+                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
+                    bk += 1
+                if bk >= 1:
+                    image_index += 1
+                    self.pbar.setValue(image_index / total_num * 100)
+                    QtWidgets.QApplication.processEvents()
+                    continue
+
                 if platform.system() =="Windows":
                     ImgName = ImagePath.split('\\')[-1].split('.')[0]
                     ImgMat = ImagePath.split('\\')[-1].split('.')[1]
@@ -431,6 +484,10 @@ def main():
                 for shape in shapeList:
                     points = shape['points']
                     className = shape["chineselabel"]
+                    eng_name = shape["label"]
+                    if str(eng_name) not in EngCls:
+                        QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
+                        continue
                     Subfolder = os.path.join(Save_dir, className)
                     Roi_path = os.path.join(Subfolder, ImgName + "_" + str(Roi_index) + f".{ImgMat}")
                     if shape['shape_type']=='rectangle':
@@ -540,16 +597,20 @@ def main():
 
             total_num = len(os.listdir(JsonPaths))
             image_index = 0
-            bk = 0
             for JsonPath in glob.glob(JsonPaths + "/*.json"):
+                bk = 0
                 ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
-                    QtWidgets.QMessageBox.warning(self, '错误', "暂不支持非bmp和jpg格式图片！！", )
+                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
+                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
                     bk += 1
                 if bk >= 1:
-                    break
+                    image_index += 1
+                    self.pbar.setValue(image_index / total_num * 100)
+                    QtWidgets.QApplication.processEvents()
+                    continue
                 MskMat = 'png'
                 if platform.system() == "Windows":
                     ImgName = ImagePath.split('\\')[-1].split('.')[0]
@@ -560,17 +621,21 @@ def main():
                 ImagePIL = Image.open(ImagePath).convert('L') #w,h
                 data = json.load(open(JsonPath, 'r', encoding='utf8'))
                 mask_label = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8)  # w,h
-                mask = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8) #w,h
-                mask = Image.fromarray(mask)
                 shapeList = data['shapes']
                 flag = 0
+                # print('ImagePath：',ImagePath)
                 for shape in shapeList:
+                    mask = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8)  # w,h
+                    mask = Image.fromarray(mask)
                     if shape['shape_type'] == 'polygon':
                         flag += 1
                         points = shape['points']
                         className = shape["label"]
+                        if str(className) not in EngCls:
+                            QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
+                            continue
                         classIndex = EngCls.index(className)
-                        #print('classIndex:',classIndex,'className:',className)
+                        # print('classIndex:',classIndex,'className:',className)
                         xy = list(map(tuple, points))
                         ImageDraw.Draw(mask).polygon(xy=xy, outline=1, fill=1)
                         mask_bool = np.array(mask,dtype=bool)
@@ -581,6 +646,13 @@ def main():
                     new_img_path = os.path.join(save_img_dir,ImgName+f'.{ImgMat}')
                     mask_label_path = os.path.join(save_msk_dir,ImgName+f'.{MskMat}')
                     mask_label_path_rgb = os.path.join(save_msk_dir_rgb,ImgName+f'.{MskMat}')
+                    if total_num ==1:
+                        if os.path.exists(new_img_path):
+                            os.remove(new_img_path)
+                        if os.path.exists(mask_label_path):
+                            os.remove(mask_label_path)
+                        if os.path.exists(mask_label_path_rgb):
+                            os.remove(mask_label_path_rgb)
                     ImagePIL.save(new_img_path)
                     Image.fromarray(mask_label).save(mask_label_path)
                     Image.fromarray(mask_label_rgb).save(mask_label_path_rgb)
@@ -686,10 +758,14 @@ def main():
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
-                    QtWidgets.QMessageBox.warning(self, '错误', "暂不支持非bmp和jpg格式图片！！", )
+                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
+                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
                     bk += 1
                 if bk >= 1:
-                    break
+                    image_index += 1
+                    self.pbar.setValue(image_index / total_num * 100)
+                    QtWidgets.QApplication.processEvents()
+                    continue
                 if platform.system() == "Windows":
                     ImgName = ImagePath.split('\\')[-1].split('.')[0]
                     ImgMat = ImagePath.split('\\')[-1].split('.')[1]
@@ -713,6 +789,9 @@ def main():
                         points = shape['points']
                         x1,y1,x2,y2 = points[0][0],points[0][1],points[1][0],points[1][1]
                         className = shape["label"]
+                        if str(className) not in EngCls:
+                            QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
+                            continue
                         box_info.append([x1,y1,x2,y2,className])
 
                 if len(box_info) == 0:
@@ -832,10 +911,10 @@ def main():
                     filePathOld = os.path.join(dirPath,FileName)
                     os.rename(filePathOld,FilePathNew)
                     CountNow +=1
-                    num +=1
-                    self.pbar.setValue(num/total_num *100)
-                    QtWidgets.QApplication.processEvents()
-                    time.sleep(0.05)
+                num +=1
+                self.pbar.setValue(num/total_num *100)
+                QtWidgets.QApplication.processEvents()
+                time.sleep(0.05)
 
         def GetInfo(self):
             path_req = self.get_directory_path

@@ -304,6 +304,7 @@ class LabelDialog(QtWidgets.QDialog):
                 self.edit.setText('')
                 self.edit1.setText('')
                 QtWidgets.QMessageBox.warning(self, '错误', f"{text}不是定义的类别，请重新输入！！！", )
+                return
                 # text = self.cb.currentText()
                 # if hasattr(text, "strip"):
                 #     text = text.strip()
@@ -399,7 +400,7 @@ class LabelDialog(QtWidgets.QDialog):
             )
         # if text is None, the previous label in self.edit is kept
         if text is None:
-            #print('text是None时text的值:', text)
+            # print('text是None时text的值:', text)
             '''
             #origin
             text = self.edit.text()
@@ -410,6 +411,8 @@ class LabelDialog(QtWidgets.QDialog):
             '''
             #is_use_edit = False
             #编辑框设置图像清晰度等默认值
+            self.edit.setText('')
+            self.edit1.setText('')
             self.edit2.setText('9')
             self.edit3.setText('9')
             self.edit4.setText('9')
@@ -422,7 +425,7 @@ class LabelDialog(QtWidgets.QDialog):
             #print('text是None时text01234的值:',text,text1,text2,text3,text4)
 
         else:
-            #print('文本框不为空时')
+            # print('text非空时:')
             '''
             text = text
             text1 = text_ch
@@ -442,15 +445,19 @@ class LabelDialog(QtWidgets.QDialog):
             #is_use_edit = True
 
             text = self.edit.text()
-            #print('text:',text)
+            # print('text:',text)
             if text:
                 text1 = self.edit1.text()
                 text2 = self.edit2.text()
                 text3 = self.edit3.text()
                 text4 = self.edit4.text()
+                self.edit.setText('')
+                self.edit1.setText('')
                 #print(text, text1, text2, text3, text4)
             else:
                 #is_use_edit = False
+                self.edit.setText('')
+                self.edit1.setText('')
                 self.edit2.setText('9')
                 self.edit3.setText('9')
                 self.edit4.setText('9')

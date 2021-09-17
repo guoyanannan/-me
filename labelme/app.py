@@ -123,6 +123,17 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList = LabelListWidget()
         self.lastOpenDir = None
 
+        TB = QtWidgets.QToolBar('类别名2')
+        self.ses = QtWidgets.QComboBox()
+        self.ses.addItems(['1','2'])
+        # self.ses.currentIndexChanged.connect(self.postProcess)
+        layout_s = QtWidgets.QFormLayout()
+        layout_s.addRow("类别名：", self.ses)
+        TB.addWidget(self.ses)
+        TB.addSeparator()
+
+
+
         self.flag_dock = self.flag_widget = None
         # self.flag_dock = QtWidgets.QDockWidget(self.tr("Flags"), self)
         self.flag_dock = QtWidgets.QDockWidget(self.tr("标记"), self)
@@ -696,10 +707,12 @@ class MainWindow(QtWidgets.QMainWindow):
             view=self.menu(self.tr("&视图")),
             # help=self.menu(self.tr("&帮助")),
             select=self.menu(self.tr("产品类型")),
+            select_name=self.menu(self.tr("-字符")),
             # recentFiles=QtWidgets.QMenu(self.tr("Open &Recent")),
             recentFiles=QtWidgets.QMenu(self.tr("&最近打开")),
             labelList=labelMenu,
         )
+
 
         #按钮
         sel1 = action(
@@ -708,39 +721,41 @@ class MainWindow(QtWidgets.QMainWindow):
             "更新冷轧类别列表",
             # checkable=True,
             # icon="done",
-            checkable=True,
+            # checkable=True,
 
         )
         sel2 = action(
             "&热轧",
             self.getClsNameRZ,
             "更新热轧类别列表",
-            checkable=True,
+            # checkable=True,
         )
         sel3 = action(
             "&板材",
             self.getClsNameBC,
             "更新板材类别列表",
-            checkable=True,
+            # checkable=True,
         )
         sel4 = action(
             "&棒材",
             self.getClsNameCB,
             "更新棒材类别列表",
-            checkable=True,
+            # checkable=True,
         )
         sel5 = action(
             "&铸坯",
             self.getClsNameZP,
             "更新连铸坯类别列表",
-            checkable=True,
+            # checkable=True,
         )
         sel6=action(
             "&字符",
             self.getClsNameZF,
             "更新字符类别列表",
-            checkable=True,
+            # checkable=True,
         )
+
+
         #产品类型
         utils.addActions(
             self.menus.select,
@@ -901,6 +916,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #    QWhatsThis.enterWhatsThisMode()
 
     def menu(self, title, actions=None):
+        menu = self.menuBar().addMenu(title)
+        if actions:
+            utils.addActions(menu, actions)
+        return menu
+
+    def menu_show(self, title, actions=None):
         menu = self.menuBar().addMenu(title)
         if actions:
             utils.addActions(menu, actions)
@@ -1192,6 +1213,7 @@ class MainWindow(QtWidgets.QMainWindow):
             t_objdef = shape.label_objdif
         except:
             t_objdef = shape.obj_definition
+
         text, flags, group_id,text_ch,text_dif,text_objdif,text_imgdif = self.labelDialog.popUp(
             text=shape.label,
             flags=shape.flags,
@@ -1201,7 +1223,7 @@ class MainWindow(QtWidgets.QMainWindow):
             text_imgdif=t_imgdef,
             text_objdif=t_objdef,
         )
-        # print(text, flags, group_id, text_ch, text_dif, text_imgdif)
+
         if text is None:
             return
         if not self.validateLabel(text):
@@ -1279,7 +1301,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
     def addLabel(self, shape):
-        # print('进入addLabel')
         if shape.group_id is None:
             try:
                 text = shape.label
@@ -1358,7 +1379,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.labelList.removeItem(item)
 
     def loadShapes(self, shapes, replace=True):
-        # print('进入loadShapes')
         self._noSelectionSlot = True
         for shape in shapes:
             self.addLabel(shape)
@@ -1367,6 +1387,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.loadShapes(shapes, replace=replace)
 
     def loadLabels(self, shapes,definition=None):
+
         s = []
         for shape in shapes:
             label = shape["label"]
@@ -1381,7 +1402,6 @@ class MainWindow(QtWidgets.QMainWindow):
             if not points:
                 # skip point-empty shape
                 continue
-
             shape = Shape(
                 label=label,
                 shape_type=shape_type,
@@ -1567,7 +1587,6 @@ class MainWindow(QtWidgets.QMainWindow):
             shape.label_dif = text_dif
             shape.label_imgdif = text_imgdif
             shape.label_objdif = text_objdif
-            #print(shape.group_id,shape.label_ch,shape.label_dif,shape.label_imgdif)
             self.addLabel(shape)
             self.actions.editMode.setEnabled(True)
             self.actions.undoLastPoint.setEnabled(False)
@@ -2070,7 +2089,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.setEnabled(False)
         self.actions.saveAs.setEnabled(False)
 
+
     def getClsNameLZ(self):
+        Pname = '-冷轧'
+        self.menus.select_name.setTitle(Pname)
+
         self.EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
                        'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
                        'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
@@ -2098,6 +2121,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         #print("Pname_冷轧")
     def getClsNameRZ(self):
+        Pname = '-热轧'
+        self.menus.select_name.setTitle(Pname)
         self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
                        'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
                        'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
@@ -2127,6 +2152,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         #print("Pname_热轧")
     def getClsNameBC(self):
+        Pname = '-板材'
+        self.menus.select_name.setTitle(Pname)
         self.EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
                        'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
                        'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
@@ -2152,6 +2179,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         # print("Pname_板材")
     def getClsNameCB(self):
+        Pname = '-棒材'
+        self.menus.select_name.setTitle(Pname)
         self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
                        'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
                        'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
@@ -2184,6 +2213,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # print("Pname_棒材")
     #铸坯
     def getClsNameZP(self):
+        Pname = '-铸坯'
+        self.menus.select_name.setTitle(Pname)
         self.EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
                        'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
                        ]
@@ -2203,6 +2234,8 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
     def getClsNameZF(self):
+        Pname = '-字符'
+        self.menus.select_name.setTitle(Pname)
         self.EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
                           'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
                           'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
