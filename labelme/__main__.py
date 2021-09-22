@@ -236,7 +236,7 @@ def main():
                     num +=1
                     self.pbar.setValue(num/total_num *100)
                     QtWidgets.QApplication.processEvents()
-                    time.sleep(0.05)
+                    # time.sleep(0.05)
 
         def GetInfo(self):
             path_req = self.get_directory_path
@@ -526,7 +526,7 @@ def main():
                 image_index +=1
                 self.pbar.setValue(image_index / total_num * 100)
                 QtWidgets.QApplication.processEvents()
-                time.sleep(0.05)
+                # time.sleep(0.05)
 
         def GenSegData(self):
             JsonPaths, ImgPaths,PType = self.chackPath()
@@ -808,7 +808,7 @@ def main():
 
                 self.pbar.setValue(image_index / total_num * 100)
                 QtWidgets.QApplication.processEvents()
-                time.sleep(0.05)
+                # time.sleep(0.05)
 
 
         def write_txt(self,img,boxes,txt_path,img_path,class_name):
@@ -914,7 +914,7 @@ def main():
                 num +=1
                 self.pbar.setValue(num/total_num *100)
                 QtWidgets.QApplication.processEvents()
-                time.sleep(0.05)
+                # time.sleep(0.05)
 
         def GetInfo(self):
             path_req = self.get_directory_path

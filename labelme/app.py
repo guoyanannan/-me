@@ -58,6 +58,7 @@ class MainWindow(QtWidgets.QMainWindow):
         output_file=None,
         output_dir=None,
     ):
+        self.select_op = False
         self.ch_name = None
         self.EngClsOri = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
                           'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
@@ -459,8 +460,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         undo = action(
             # self.tr("Undo"),
-            self.tr("撤销"),
+            self.tr("&撤销"),
             self.undoShapeEdit,
+            # None,
             shortcuts["undo"],
             "undo",
             self.tr("Undo last add and edit of shape"),
@@ -702,12 +704,13 @@ class MainWindow(QtWidgets.QMainWindow):
             # view=self.menu(self.tr("&View")),
             # help=self.menu(self.tr("&Help")),
             # recentFiles=QtWidgets.QMenu(self.tr("Open &Recent")),
+            activate=self.menu(self.tr("&激活")),
             file=self.menu(self.tr("&文件")),
             edit=self.menu(self.tr("&编辑")),
             view=self.menu(self.tr("&视图")),
             # help=self.menu(self.tr("&帮助")),
-            select=self.menu(self.tr("产品类型")),
-            select_name=self.menu(self.tr("-字符")),
+            select=self.menu(self.tr("&产品类型")),
+            select_name=self.menu(self.tr("&->字符")),
             # recentFiles=QtWidgets.QMenu(self.tr("Open &Recent")),
             recentFiles=QtWidgets.QMenu(self.tr("&最近打开")),
             labelList=labelMenu,
@@ -755,7 +758,21 @@ class MainWindow(QtWidgets.QMainWindow):
             # checkable=True,
         )
 
-
+        Activate = action(
+            "&激活产品切换功能",
+            self.toYes,
+        )
+        Deactivate = action(
+            "&停止产品切换功能",
+            self.toNo,
+        )
+        utils.addActions(
+            self.menus.activate,
+            (
+                Activate,
+                Deactivate,
+            ),
+        )
         #产品类型
         utils.addActions(
             self.menus.select,
@@ -1051,6 +1068,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList.clear()
         self.loadShapes(self.canvas.shapes)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
+        print('撤销按钮是否变黑：',self.canvas.isShapeRestorable)
+        self.actions.save.setEnabled(True)
 
     def tutorial(self):
         url = "https://github.com/wkentaro/labelme/tree/master/examples/tutorial"  # NOQA
@@ -1213,7 +1232,7 @@ class MainWindow(QtWidgets.QMainWindow):
             t_objdef = shape.label_objdif
         except:
             t_objdef = shape.obj_definition
-
+        print('>>>>>11111111111')
         text, flags, group_id,text_ch,text_dif,text_objdif,text_imgdif = self.labelDialog.popUp(
             text=shape.label,
             flags=shape.flags,
@@ -1223,7 +1242,7 @@ class MainWindow(QtWidgets.QMainWindow):
             text_imgdif=t_imgdef,
             text_objdif=t_objdef,
         )
-
+        print('11111111111<<<<<<<<<<<<<<<')
         if text is None:
             return
         if not self.validateLabel(text):
@@ -1326,11 +1345,18 @@ class MainWindow(QtWidgets.QMainWindow):
                 text_objdif = shape.obj_definition
 
             #text = text0 +" "+ text_ch +" "+ text_dif+" " + text_imgdif
-            #print(text,text_ch,text_dif,text_imgdif)
+            print('addLabel',text,text_ch,text_dif,text_objdif,text_imgdif)
         else:
             text = "{} ({})".format(shape.label, shape.group_id)
             # text = "{}{}{} ({})".format(shape.label,shape.label_ch, shape.label_dif,shape.group_id)
-            # text = shape.label +" "+ shape.label_ch +" "+ shape.label_dif+" " + shape.label_imgdif+" " + shape.group_id
+        # text = shape.label +" "+ shape.chineselabel +" "+ shape.confidence+" " + shape.obj_definition+" " + shape.group_id +" " +shape.definition
+        shape.label = text
+        shape.chineselabel = text_ch
+        shape.confidence = text_dif
+        shape.obj_definition = text_objdif
+        shape.definition = text_imgdif
+        print('addLabel_shape_one:',shape.label,shape.chineselabel,shape.confidence,shape.obj_definition,shape.definition)
+
         label_list_item = LabelListWidgetItem(text, shape)
         # print(label_list_item)
         self.labelList.addItem(label_list_item)
@@ -1469,16 +1495,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
             return data
         shapes = [format_shape(item.shape()) for item in self.labelList]
+        print('shapes：',shapes)
+        print('item.shape()：')
+        print([item.shape() for item in self.labelList])
         img_defi = ''
         try:
             img_defi = [item.shape().label_imgdif for item in self.labelList][-1]
+            print('try_img_defi：',img_defi)
         except:
             info_decide = [item.shape().definition for item in self.labelList]
+            print('except_info_decide：', info_decide)
             if len(info_decide) != 0:
                 img_defi = [item.shape().definition for item in self.labelList][-1]
             elif len(info_decide) == 0:
                 img_defi = '9'
-
+            print('except_img_defi：',img_defi)
         flags = {}
         for i in range(self.flag_widget.count()):
             item = self.flag_widget.item(i)
@@ -1564,11 +1595,17 @@ class MainWindow(QtWidgets.QMainWindow):
         group_id = None
         if self._config["display_label_popup"] or not text:
             previous_text = self.labelDialog.edit.text()
+            # previous_text1 = self.labelDialog.edit1.text()
             #标注框停留位置and输入标签停留地
+            print('>>>>>>>>>2222222222222222222')
             text, flags, group_id,text_ch,text_dif,text_objdif,text_imgdif = self.labelDialog.popUp(text)
+            print(text, flags, group_id,text_ch,text_dif,text_objdif,text_imgdif)
             self.ch_name = text_ch
+            print('2222222222222222<<<<<<<<<<<<<<')
             if not text:
+                # pass
                 self.labelDialog.edit.setText(previous_text)
+                # self.labelDialog.edit1.setText(previous_text1)
 
         if text and not self.validateLabel(text):
             self.errorMessage(
@@ -2018,12 +2055,16 @@ class MainWindow(QtWidgets.QMainWindow):
         assert not self.image.isNull(), "cannot save empty image"
         # try:
         if self.labelFile:
+            print('!!!!!!!!!')
             # DL20180323 - overwrite when in directory
+            print('self.labelFile.filename：',self.labelFile.filename)
             self._saveFile(self.labelFile.filename)
         elif self.output_file:
+            print('@@@@@@@@@@@')
             self._saveFile(self.output_file)
             self.close()
         else:
+            print('#########')
             self._saveFile(self.saveFileDialog())
         # except:
         #     self.errorMessage(
@@ -2074,7 +2115,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return filename
 
     def _saveFile(self, filename):
-        #print('进去_saveFile函数')
+        print('进去_saveFile函数')
         #print('self.saveLabels(filename:',self.saveLabels(filename))
         if filename and self.saveLabels(filename):
             self.addRecentFile(filename)
@@ -2089,179 +2130,213 @@ class MainWindow(QtWidgets.QMainWindow):
         self.canvas.setEnabled(False)
         self.actions.saveAs.setEnabled(False)
 
-
+    def toYes(self):
+        self.select_op = True
+        QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能已激活！！", )
+    def toNo(self):
+        self.select_op = False
+        QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能已关闭！！", )
     def getClsNameLZ(self):
-        Pname = '-冷轧'
-        self.menus.select_name.setTitle(Pname)
+        if self.select_op:
+            Pname = '->冷轧'
+            self.menus.select_name.setTitle(Pname)
 
-        self.EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
-                       'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
-                       'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
-                       'AoKeng','BianSiLaRu','ZaoShang','TingJiWenLi','ZaoShangFenSuan','JianDuanReZhaGuaShang',
-                       'SuanYinHuLue','XianXingJiaZa','YanZhongYangHuaPiTuoLuoHen','YaHen','YangHuaPiTuoLuoHenHuLue','HanFeng',
-                       'CengJianCaShang','CengJianCaShangYi','ErLeiReZhaGuaShang','LieBian','ShuiYin','BianBuHuLue',
-                       ]
-        self.ChiCls = ['背景','整面缺陷','二类脱皮','二类脱皮一','异物压入','锈点',
-                       '疤痕','酸印','边部轧锈','脱皮','曝光色差','热轧刮伤',
-                       '氧化皮脱落痕','退洗刮伤','黑带','酸洗不足','热辊印','脏污',
-                       '凹坑','边丝拉入','凿伤','停机纹理','凿伤分散','间断热轧刮伤',
-                       '酸印忽略','线性夹杂','严重氧化皮脱落痕','压痕','氧化皮脱落痕忽略','焊缝',
-                       '层间擦伤','层间擦伤一','二类热轧刮伤','裂边','水印','边部忽略',
-                       ]
-        self.labelDialog = LabelDialog(
-            parent=self,
-            labels=self._config["labels"],
-            sort_labels=self._config["sort_labels"],
-            show_text_field=self._config["show_label_text_field"],
-            completion=self._config["label_completion"],
-            fit_to_content=self._config["fit_to_content"],
-            flags=self._config["label_flags"],
-            EngClsList = self.EngCls,
-            ChiClsList = self.ChiCls,
-        )
-        #print("Pname_冷轧")
+            self.EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
+                           'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
+                           'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
+                           'AoKeng','BianSiLaRu','ZaoShang','TingJiWenLi','ZaoShangFenSuan','JianDuanReZhaGuaShang',
+                           'SuanYinHuLue','XianXingJiaZa','YanZhongYangHuaPiTuoLuoHen','YaHen','YangHuaPiTuoLuoHenHuLue','HanFeng',
+                           'CengJianCaShang','CengJianCaShangYi','ErLeiReZhaGuaShang','LieBian','ShuiYin','BianBuHuLue',
+                           ]
+            self.ChiCls = ['背景','整面缺陷','二类脱皮','二类脱皮一','异物压入','锈点',
+                           '疤痕','酸印','边部轧锈','脱皮','曝光色差','热轧刮伤',
+                           '氧化皮脱落痕','退洗刮伤','黑带','酸洗不足','热辊印','脏污',
+                           '凹坑','边丝拉入','凿伤','停机纹理','凿伤分散','间断热轧刮伤',
+                           '酸印忽略','线性夹杂','严重氧化皮脱落痕','压痕','氧化皮脱落痕忽略','焊缝',
+                           '层间擦伤','层间擦伤一','二类热轧刮伤','裂边','水印','边部忽略',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='冷轧',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            #print("Pname_冷轧")
+            self.select_op = False
+        else:
+            QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
     def getClsNameRZ(self):
-        Pname = '-热轧'
-        self.menus.select_name.setTitle(Pname)
-        self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                       'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
-                       ]
-        self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
-                       '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
-                       '亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
-                       '振痕', '片状铁鳞', '波形', '水滴', '水雾', '水印',
-                       '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
-                       '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
-                       '边缘毛刺', '过曝光', '锈皮脱落', '擦疤', '背景七', '背景八',
-                       ]
-        self.labelDialog = LabelDialog(
-            parent=self,
-            labels=self._config["labels"],
-            sort_labels=self._config["sort_labels"],
-            show_text_field=self._config["show_label_text_field"],
-            completion=self._config["label_completion"],
-            fit_to_content=self._config["fit_to_content"],
-            flags=self._config["label_flags"],
-            EngClsList = self.EngCls,
-            ChiClsList = self.ChiCls,
-        )
-        #print("Pname_热轧")
+        if self.select_op:
+            Pname = '->热轧'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                           'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                           'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                           'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                           'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                           'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                           'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                           ]
+            self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
+                           '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
+                           '亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
+                           '振痕', '片状铁鳞', '波形', '水滴', '水雾', '水印',
+                           '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
+                           '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
+                           '边缘毛刺', '过曝光', '锈皮脱落', '擦疤', '背景七', '背景八',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='热轧',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            #print("Pname_热轧")
+            self.select_op = False
+        else:
+            QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
     def getClsNameBC(self):
-        Pname = '-板材'
-        self.menus.select_name.setTitle(Pname)
-        self.EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
-                       'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
-                       'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
-                       'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
-                       'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
-                       ]
-        self.ChiCls = ['待分类', '纵向裂纹', '横向裂纹', '边裂', '水印', '辊印',
-                       '压坑', '翘皮', '线性缺陷', '划伤', '压痕', '水滴',
-                       '屏蔽边部', '屏蔽头尾', '背景一', '背景二', '背景三', '背景四',
-                       '背景五', '背景六', '背景七', '背景八', '麻点', '异物压入',
-                       '水纹', '结疤', '氧化铁皮', '线性缺陷一', '疑似异物压入',
-                       ]
-        self.labelDialog = LabelDialog(
-            parent=self,
-            labels=self._config["labels"],
-            sort_labels=self._config["sort_labels"],
-            show_text_field=self._config["show_label_text_field"],
-            completion=self._config["label_completion"],
-            fit_to_content=self._config["fit_to_content"],
-            flags=self._config["label_flags"],
-            EngClsList = self.EngCls,
-            ChiClsList = self.ChiCls,
-        )
-        # print("Pname_板材")
+        if self.select_op:
+            Pname = '->板材'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
+                           'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
+                           'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
+                           'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
+                           'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
+                           ]
+            self.ChiCls = ['待分类', '纵向裂纹', '横向裂纹', '边裂', '水印', '辊印',
+                           '压坑', '翘皮', '线性缺陷', '划伤', '压痕', '水滴',
+                           '屏蔽边部', '屏蔽头尾', '背景一', '背景二', '背景三', '背景四',
+                           '背景五', '背景六', '背景七', '背景八', '麻点', '异物压入',
+                           '水纹', '结疤', '氧化铁皮', '线性缺陷一', '疑似异物压入',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='板材',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            # print("Pname_板材")
+            self.select_op = False
+        else:
+            QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
     def getClsNameCB(self):
-        Pname = '-棒材'
-        self.menus.select_name.setTitle(Pname)
-        self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                       'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
-                       'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
-                       ]
-        self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
-                       '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
-                       '亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
-                       '振痕', '片状铁鳞', '波形', '水滴', '水雾', '水印',
-                       '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
-                       '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
-                       '背景七', '边缘毛刺', '过曝光', '背景八', '背景九', '背景十',
-                       '背景十一', '锈皮脱落', '凹坑', '耳朵', '划伤', '背景',
-                       ]
-        self.labelDialog = LabelDialog(
-            parent=self,
-            labels=self._config["labels"],
-            sort_labels=self._config["sort_labels"],
-            show_text_field=self._config["show_label_text_field"],
-            completion=self._config["label_completion"],
-            fit_to_content=self._config["fit_to_content"],
-            flags=self._config["label_flags"],
-            EngClsList = self.EngCls,
-            ChiClsList = self.ChiCls,
-        )
-        # print("Pname_棒材")
+        if self.select_op:
+            Pname = '->棒材'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                           'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                           'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                           'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                           'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                           'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                           'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
+                           'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
+                           ]
+            self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
+                           '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
+                           '亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
+                           '振痕', '片状铁鳞', '波形', '水滴', '水雾', '水印',
+                           '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
+                           '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
+                           '背景七', '边缘毛刺', '过曝光', '背景八', '背景九', '背景十',
+                           '背景十一', '锈皮脱落', '凹坑', '耳朵', '划伤', '背景',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='棒材',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            # print("Pname_棒材")
+            self.select_op =False
+        else:
+            QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
     #铸坯
     def getClsNameZP(self):
-        Pname = '-铸坯'
-        self.menus.select_name.setTitle(Pname)
-        self.EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
-                       'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
-                       ]
-        self.ChiCls = ['背景', '纵向裂纹', '横向裂纹', '划伤', '水渣印', '辊印',
-                       '渣皮', '切割开口', '停止线', '擦划伤', '端面焊渣', '接痕',
-                       ]
-        self.labelDialog = LabelDialog(
-            parent=self,
-            labels=self._config["labels"],
-            sort_labels=self._config["sort_labels"],
-            show_text_field=self._config["show_label_text_field"],
-            completion=self._config["label_completion"],
-            fit_to_content=self._config["fit_to_content"],
-            flags=self._config["label_flags"],
-            EngClsList = self.EngCls,
-            ChiClsList = self.ChiCls,
-        )
+        if self.select_op:
+            Pname = '->铸坯'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
+                           'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
+                           ]
+            self.ChiCls = ['背景', '纵向裂纹', '横向裂纹', '划伤', '水渣印', '辊印',
+                           '渣皮', '切割开口', '停止线', '擦划伤', '端面焊渣', '接痕',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='铸坯',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            self.select_op = False
+        else:
+            QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
 
     def getClsNameZF(self):
-        Pname = '-字符'
-        self.menus.select_name.setTitle(Pname)
-        self.EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
-                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
-                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
-                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
-                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
-                          'u','v','w','x','y','z']
-        self.ChiCls = ['背景','0','1','2','3','4','5','6','7','8','9',
-                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
-                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
-                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
-                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
-                          'u','v','w','x','y','z']
-        self.labelDialog = LabelDialog(
-            parent=self,
-            labels=self._config["labels"],
-            sort_labels=self._config["sort_labels"],
-            show_text_field=self._config["show_label_text_field"],
-            completion=self._config["label_completion"],
-            fit_to_content=self._config["fit_to_content"],
-            flags=self._config["label_flags"],
-            EngClsList = self.EngCls,
-            ChiClsList = self.ChiCls,
-        )
-        # print("Pname_字符")
-        # print(self.EngCls)
-        # print(self.ChiCls)
+        if self.select_op:
+            Pname = '->字符'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
+                              'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                              'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                              '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                              'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                              'u','v','w','x','y','z']
+            self.ChiCls = ['背景','0','1','2','3','4','5','6','7','8','9',
+                              'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                              'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                              '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                              'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                              'u','v','w','x','y','z']
+            self.labelDialog = LabelDialog(
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            # print("Pname_字符")
+            # print(self.EngCls)
+            # print(self.ChiCls)
+            self.select_op = False
+        else:
+            QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
 
     def getLabelFile(self):
         if self.filename.lower().endswith(".json"):
@@ -2404,6 +2479,9 @@ class MainWindow(QtWidgets.QMainWindow):
             )
         )
         self.importDirImages(targetDirPath)
+        if self.select_op is False:
+            self.select_op = True
+            QtWidgets.QMessageBox.information(self, '提示', "产品切换功能已激活！！！", )
 
     @property
     def imageList(self):
