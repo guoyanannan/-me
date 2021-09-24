@@ -188,6 +188,7 @@ def main():
         filename=filename,
         output_file=output_file,
         output_dir=output_dir,
+        mode=1,
     )
 
     if reset_config:
@@ -754,14 +755,13 @@ def main():
 
         def GetInfo(self):
             path_req = self.get_directory_path
-            time_info = str(self.dateEdit1.dateTime().toPython())[:-7]
+            # print(str(self.dateEdit1.dateTime().toPyDateTime()))
+            # print(help(self.dateEdit1.dateTime()))
+            time_info = str(self.dateEdit1.dateTime().toPyDateTime())[:-7]
             n_time11 = time.strptime(time_info, "%Y-%m-%d %H:%M:%S")
             n_time1 = int(time.strftime('%Y%m%d%H%M%S', n_time11))
             text_name = self.lin_2.text()
-            # print("time_info：",time_info)
-            # print("text_name:",text_name,bool(text_name))
-            # print("n_time1:",n_time1)
-            # print("path_req",path_req)
+
             if not path_req :
                 QtWidgets.QMessageBox.warning(self, '错误',"请选择非空目录！！")
             else:
@@ -841,6 +841,7 @@ def main():
             #
             self.label1 = QtWidgets.QLabel('标注时间:',self)
             self.dateEdit1 = QtWidgets.QDateTimeEdit(QtCore.QDateTime.currentDateTime(), self)
+
             self.dateEdit1.setDisplayFormat('yyyy-MM-dd HH:mm:ss')
             self.dateEdit1.resize(200,30)
             self.dateEdit1.move(self.width()//3,self.height()//6)

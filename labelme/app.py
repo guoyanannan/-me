@@ -2835,8 +2835,8 @@ class select_product_type(QtWidgets.QDialog):
         self.initUI()
 
     def closewin(self):
-        self.file_f(self.path)
         self.close()
+        self.file_f(self.path)
     def showwin(self,op_f,path):
         self.file_f = op_f
         self.path = path
