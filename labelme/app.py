@@ -2865,13 +2865,15 @@ class select_product_type(QtWidgets.QDialog):
 
         self.Menu.addActions([lz_action, rz_action, bc_action, cb_action, zp_action,zf_action])  # 将图标添加到菜单中
         self.MenuBtn.setMenu(self.Menu)  # 将菜单添加到按键中
-
+        self.label1 = QtWidgets.QLabel('请选择产品类型:', self)
         # self.btno = QtWidgets.QPushButton("确定", self)
         # self.btno.clicked.connect(self.closewin)
 
         self.setGeometry(400, 400, 200, 50)
         self.setWindowTitle('标注工具[测试版本v1.0.0]:BKVISION')
-        # self.MenuBtn.move(self.MenuBtn.height()//2, self.height() // 5)
+        self.MenuBtn.move(self.MenuBtn.height()//2+0.9*self.MenuBtn.width(), self.height() // 5)
+        self.label1.resize(self.MenuBtn.width(),self.MenuBtn.height())
+        self.label1.move(self.MenuBtn.x()-0.9*self.label1.width(),self.MenuBtn.y()-3)
         # self.btno.move(self.MenuBtn.x()+self.MenuBtn.width(),self.MenuBtn.y())
         # 固定窗口大小
         # self.setFixedSize(self.width(), self.height())
