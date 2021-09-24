@@ -8,6 +8,7 @@ import re
 import webbrowser
 
 import imgviz
+import qtpy.QtWidgets
 from qtpy import QtCore
 from qtpy.QtCore import Qt
 from qtpy import QtGui
@@ -57,7 +58,10 @@ class MainWindow(QtWidgets.QMainWindow):
         output=None,
         output_file=None,
         output_dir=None,
+        mode = 1,
     ):
+        self.mode =mode
+        self.childSSS = select_product_type(self.getClsNameLZ_win,self.getClsNameRZ_win,self.getClsNameBC_win,self.getClsNameCB_win,self.getClsNameZP_win,self.getClsNameZF_win)
         self.select_op = False
         self.ch_name = None
         self.EngClsOri = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
@@ -710,7 +714,7 @@ class MainWindow(QtWidgets.QMainWindow):
             view=self.menu(self.tr("&视图")),
             # help=self.menu(self.tr("&帮助")),
             select=self.menu(self.tr("&产品类型")),
-            select_name=self.menu(self.tr("&->字符")),
+            select_name=self.menu(self.tr("&👆字符👆")),
             # recentFiles=QtWidgets.QMenu(self.tr("Open &Recent")),
             recentFiles=QtWidgets.QMenu(self.tr("&最近打开")),
             labelList=labelMenu,
@@ -2137,8 +2141,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.select_op = False
         QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能已关闭！！", )
     def getClsNameLZ(self):
+
         if self.select_op:
-            Pname = '->冷轧'
+            Pname = '👉冷轧👈'
             self.menus.select_name.setTitle(Pname)
 
             self.EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
@@ -2169,11 +2174,56 @@ class MainWindow(QtWidgets.QMainWindow):
             )
             #print("Pname_冷轧")
             self.select_op = False
+
         else:
             QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
-    def getClsNameRZ(self):
+
+
+    def getClsNameLZ_win(self,fuction_close):
         if self.select_op:
-            Pname = '->热轧'
+            Pname = '👉冷轧👈'
+            self.menus.select_name.setTitle(Pname)
+
+            self.EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
+                           'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
+                           'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
+                           'AoKeng','BianSiLaRu','ZaoShang','TingJiWenLi','ZaoShangFenSuan','JianDuanReZhaGuaShang',
+                           'SuanYinHuLue','XianXingJiaZa','YanZhongYangHuaPiTuoLuoHen','YaHen','YangHuaPiTuoLuoHenHuLue','HanFeng',
+                           'CengJianCaShang','CengJianCaShangYi','ErLeiReZhaGuaShang','LieBian','ShuiYin','BianBuHuLue',
+                           ]
+            self.ChiCls = ['背景','整面缺陷','二类脱皮','二类脱皮一','异物压入','锈点',
+                           '疤痕','酸印','边部轧锈','脱皮','曝光色差','热轧刮伤',
+                           '氧化皮脱落痕','退洗刮伤','黑带','酸洗不足','热辊印','脏污',
+                           '凹坑','边丝拉入','凿伤','停机纹理','凿伤分散','间断热轧刮伤',
+                           '酸印忽略','线性夹杂','严重氧化皮脱落痕','压痕','氧化皮脱落痕忽略','焊缝',
+                           '层间擦伤','层间擦伤一','二类热轧刮伤','裂边','水印','边部忽略',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='冷轧',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            #print("Pname_冷轧")
+
+            reply = QtWidgets.QMessageBox.question(self, '提示',
+                                                   "当前选择产品类型为:<a style='color:red;font_size:1000'>冷轧</a>,确认请点击按钮 Yes,重新选型请点击按钮 No", QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if reply == QtWidgets.QMessageBox.Yes:
+                self.select_op = False
+                fuction_close()
+
+
+    def getClsNameRZ(self):
+
+        if self.select_op:
+            Pname = '👉热轧👈'
             self.menus.select_name.setTitle(Pname)
             self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
                            'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
@@ -2207,9 +2257,53 @@ class MainWindow(QtWidgets.QMainWindow):
             self.select_op = False
         else:
             QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
-    def getClsNameBC(self):
+
+    def getClsNameRZ_win(self,fuction_close):
+
         if self.select_op:
-            Pname = '->板材'
+            Pname = '👉热轧👈'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                           'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                           'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                           'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                           'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                           'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                           'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                           ]
+            self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
+                           '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
+                           '亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
+                           '振痕', '片状铁鳞', '波形', '水滴', '水雾', '水印',
+                           '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
+                           '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
+                           '边缘毛刺', '过曝光', '锈皮脱落', '擦疤', '背景七', '背景八',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='热轧',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            #print("Pname_热轧")
+            reply = QtWidgets.QMessageBox.question(self, '提示',
+                                                   "当前选择产品类型为:<a style='color:red;font_size:1000'>热轧</a>,确认请点击按钮 Yes,重新选型请点击按钮 No",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if reply == QtWidgets.QMessageBox.Yes:
+                self.select_op = False
+                fuction_close()
+
+    def getClsNameBC(self):
+
+        if self.select_op:
+            Pname = '👉板材👈'
             self.menus.select_name.setTitle(Pname)
             self.EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
                            'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
@@ -2239,9 +2333,49 @@ class MainWindow(QtWidgets.QMainWindow):
             self.select_op = False
         else:
             QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
-    def getClsNameCB(self):
+
+    def getClsNameBC_win(self,fuction_close):
+
         if self.select_op:
-            Pname = '->棒材'
+            Pname = '👉板材👈'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
+                           'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
+                           'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
+                           'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
+                           'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
+                           ]
+            self.ChiCls = ['待分类', '纵向裂纹', '横向裂纹', '边裂', '水印', '辊印',
+                           '压坑', '翘皮', '线性缺陷', '划伤', '压痕', '水滴',
+                           '屏蔽边部', '屏蔽头尾', '背景一', '背景二', '背景三', '背景四',
+                           '背景五', '背景六', '背景七', '背景八', '麻点', '异物压入',
+                           '水纹', '结疤', '氧化铁皮', '线性缺陷一', '疑似异物压入',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='板材',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            # print("Pname_板材")
+            reply = QtWidgets.QMessageBox.question(self, '提示',
+                                                   "当前选择产品类型为:<a style='color:red;font_size:1000'>板材</a>,确认请点击按钮 Yes,重新选型请点击按钮 No",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if reply == QtWidgets.QMessageBox.Yes:
+                self.select_op = False
+                fuction_close()
+
+    def getClsNameCB(self):
+
+        if self.select_op:
+            Pname = '👉棒材👈'
             self.menus.select_name.setTitle(Pname)
             self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
                            'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
@@ -2277,10 +2411,56 @@ class MainWindow(QtWidgets.QMainWindow):
             self.select_op =False
         else:
             QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
+
+    def getClsNameCB_win(self,fuction_close):
+
+        if self.select_op:
+            Pname = '👉棒材👈'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
+                           'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                           'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                           'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                           'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                           'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                           'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
+                           'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
+                           ]
+            self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
+                           '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
+                           '亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
+                           '振痕', '片状铁鳞', '波形', '水滴', '水雾', '水印',
+                           '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
+                           '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
+                           '背景七', '边缘毛刺', '过曝光', '背景八', '背景九', '背景十',
+                           '背景十一', '锈皮脱落', '凹坑', '耳朵', '划伤', '背景',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='棒材',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            # print("Pname_棒材")
+            reply = QtWidgets.QMessageBox.question(self, '提示',
+                                                   "当前选择产品类型为:<a style='color:red;font_size:1000'>棒材</a>,确认请点击按钮 Yes,重新选型请点击按钮 No",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if reply == QtWidgets.QMessageBox.Yes:
+                self.select_op = False
+                fuction_close()
+
     #铸坯
     def getClsNameZP(self):
+
         if self.select_op:
-            Pname = '->铸坯'
+            Pname = '👉铸坯👈'
             self.menus.select_name.setTitle(Pname)
             self.EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
                            'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
@@ -2304,9 +2484,41 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
 
-    def getClsNameZF(self):
+    def getClsNameZP_win(self,fuction_close):
+
         if self.select_op:
-            Pname = '->字符'
+            Pname = '👉铸坯👈'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
+                           'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
+                           ]
+            self.ChiCls = ['背景', '纵向裂纹', '横向裂纹', '划伤', '水渣印', '辊印',
+                           '渣皮', '切割开口', '停止线', '擦划伤', '端面焊渣', '接痕',
+                           ]
+            self.labelDialog = LabelDialog(
+                currentType='铸坯',
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+
+            reply = QtWidgets.QMessageBox.question(self, '提示',
+                                                   "当前选择产品类型为:<a style='color:red;font_size:1000'>铸坯</a>,确认请点击按钮 Yes,重新选型请点击按钮 No",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if reply == QtWidgets.QMessageBox.Yes:
+                self.select_op = False
+                fuction_close()
+    def getClsNameZF(self):
+
+        if self.select_op:
+            Pname = '👉字符👈'
             self.menus.select_name.setTitle(Pname)
             self.EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
                               'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
@@ -2338,6 +2550,42 @@ class MainWindow(QtWidgets.QMainWindow):
         else:
             QtWidgets.QMessageBox.information(self, '提示', "切换产品类型功能失效,请点击激活按钮进行激活或选择打开目录进行激活！", )
 
+    def getClsNameZF_win(self,fuction_close):
+
+        if self.select_op:
+            Pname = '👉字符👈'
+            self.menus.select_name.setTitle(Pname)
+            self.EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
+                              'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                              'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                              '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                              'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                              'u','v','w','x','y','z']
+            self.ChiCls = ['背景','0','1','2','3','4','5','6','7','8','9',
+                              'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
+                              'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
+                              '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
+                              'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
+                              'u','v','w','x','y','z']
+            self.labelDialog = LabelDialog(
+                parent=self,
+                labels=self._config["labels"],
+                sort_labels=self._config["sort_labels"],
+                show_text_field=self._config["show_label_text_field"],
+                completion=self._config["label_completion"],
+                fit_to_content=self._config["fit_to_content"],
+                flags=self._config["label_flags"],
+                EngClsList = self.EngCls,
+                ChiClsList = self.ChiCls,
+            )
+            # print("Pname_字符")
+            reply = QtWidgets.QMessageBox.question(self, '提示',
+                                                   "当前选择产品类型为:<a style='color:red;font_size:1000'>字符</a>,确认请点击按钮 Yes,重新选型请点击按钮 No",
+                                                   QtWidgets.QMessageBox.Yes |
+                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if reply == QtWidgets.QMessageBox.Yes:
+                self.select_op = False
+                fuction_close()
     def getLabelFile(self):
         if self.filename.lower().endswith(".json"):
             label_file = self.filename
@@ -2468,7 +2716,6 @@ class MainWindow(QtWidgets.QMainWindow):
             defaultOpenDirPath = (
                 osp.dirname(self.filename) if self.filename else "."
             )
-
         targetDirPath = str(
             QtWidgets.QFileDialog.getExistingDirectory(
                 self,
@@ -2478,10 +2725,19 @@ class MainWindow(QtWidgets.QMainWindow):
                 | QtWidgets.QFileDialog.DontResolveSymlinks,
             )
         )
-        self.importDirImages(targetDirPath)
-        if self.select_op is False:
+
+        if targetDirPath and self.mode ==1:
             self.select_op = True
-            QtWidgets.QMessageBox.information(self, '提示', "产品切换功能已激活！！！", )
+            product_type = self.childSSS
+            product_type.setModal(True)
+            product_type.showwin(self.importDirImages,targetDirPath)
+            # self.select_op = False
+            # self.importDirImages(targetDirPath)
+        if targetDirPath and self.mode ==2:
+            self.importDirImages(targetDirPath)
+            if self.select_op is False:
+                self.select_op = True
+                QtWidgets.QMessageBox.information(self, '提示', "产品切换功能已激活！！！", )
 
     @property
     def imageList(self):
@@ -2565,3 +2821,60 @@ class MainWindow(QtWidgets.QMainWindow):
                     images.append(relativePath)
         images.sort(key=lambda x: x.lower())
         return images
+
+
+class select_product_type(QtWidgets.QDialog):
+    def __init__(self,LZ,RZ,BC,CB,ZP,ZF): #LZ,RZ,BC,CB,ZP,ZF
+        super().__init__()
+        self.useLz = LZ
+        self.useRz = RZ
+        self.useBc = BC
+        self.useCb = CB
+        self.useZp = ZP
+        self.useZf = ZF
+        self.initUI()
+
+    def closewin(self):
+        self.file_f(self.path)
+        self.close()
+    def showwin(self,op_f,path):
+        self.file_f = op_f
+        self.path = path
+        self.show()
+
+
+    def initUI(self):
+        # 创建一个菜单
+        self.MenuBtn = QtWidgets.QPushButton("产品类型", self)
+
+        # 创建一个菜单对象
+        self.Menu = QtWidgets.QMenu()
+        # 菜单中的选项
+        lz_action = QtWidgets.QAction('冷轧', self)  # 创建对象
+        lz_action.triggered.connect(lambda :self.useLz(self.closewin))
+        rz_action = QtWidgets.QAction('热轧', self)  # 创建对象
+        rz_action.triggered.connect(lambda:self.useRz(self.closewin))
+        bc_action = QtWidgets.QAction('板材', self)  # 创建对象
+        bc_action.triggered.connect(lambda:self.useBc(self.closewin))
+        cb_action = QtWidgets.QAction('棒材', self)  # 创建对象
+        cb_action.triggered.connect(lambda:self.useCb(self.closewin))
+        zp_action = QtWidgets.QAction('铸坯', self)  # 创建对象
+        zp_action.triggered.connect(lambda:self.useZp(self.closewin))
+        zf_action = QtWidgets.QAction('字符', self)  # 创建对象
+        zf_action.triggered.connect(lambda:self.useZf(self.closewin))
+
+        self.Menu.addActions([lz_action, rz_action, bc_action, cb_action, zp_action,zf_action])  # 将图标添加到菜单中
+        self.MenuBtn.setMenu(self.Menu)  # 将菜单添加到按键中
+
+        # self.btno = QtWidgets.QPushButton("确定", self)
+        # self.btno.clicked.connect(self.closewin)
+
+        self.setGeometry(400, 400, 200, 50)
+        self.setWindowTitle('标注工具[测试版本v1.0.0]:BKVISION')
+        # self.MenuBtn.move(self.MenuBtn.height()//2, self.height() // 5)
+        # self.btno.move(self.MenuBtn.x()+self.MenuBtn.width(),self.MenuBtn.y())
+        # 固定窗口大小
+        # self.setFixedSize(self.width(), self.height())
+
+        # self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.setWindowFlags(QtCore.Qt.WindowMaximizeButtonHint | QtCore.Qt.MSWindowsFixedSizeDialogHint)

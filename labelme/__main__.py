@@ -182,170 +182,6 @@ def main():
     app.setWindowIcon(newIcon("icon"))
     # 汉化
     # app.installTranslator(translator)
-    class Three(QtWidgets.QMainWindow):
-        def __init__(self,win):
-            super().__init__()
-            self.win = win
-            self.get_directory_path = None
-            self.initUI()
-
-        def closewin(self):
-            self.close()
-
-        def switchWin(self):
-            self.closewin()
-            self.win.show()
-            self.win.raise_()
-
-        def isInZh(self,s):
-            for c in s:
-                if '\u4e00' <= c <= '\u9fa5':
-                    return True
-            return False
-
-        def openFile(self):
-            self.get_directory_path = QtWidgets.QFileDialog.getExistingDirectory(self,"选取指定文件夹","C:/")
-
-        def chackPath(self):
-            DataPath = self.get_directory_path
-            if not DataPath:
-                QtWidgets.QMessageBox.warning(self, '错误', "请选择非空目录！！", )
-                return None,None
-            elif not ("images" and "labels") in os.listdir(DataPath):
-                QtWidgets.QMessageBox.warning(self, '错误', "请选择包含images和labels的目录！！", )
-                return None, None
-            else:
-                JsonPaths = os.path.join(DataPath,"labels")
-                ImgPaths = os.path.join(DataPath,"images")
-                return JsonPaths,ImgPaths
-
-
-
-        def renameFiles(self,dirPath,Mat,Ttime,Tname,Count):
-            CountNow =Count
-            num = 0
-            total_num = len(os.listdir(dirPath))
-            for FileName in os.listdir(dirPath):
-                if FileName.split(".")[-1] ==Mat:
-                    CountCr = "%06d"%CountNow
-                    FileNameNew = FileName.replace(FileName.split(".")[0],str(Tname)+"_"+str(Ttime)+"_"+CountCr)
-                    FilePathNew = os.path.join(dirPath,FileNameNew)
-                    filePathOld = os.path.join(dirPath,FileName)
-                    os.rename(filePathOld,FilePathNew)
-                    CountNow +=1
-                    num +=1
-                    self.pbar.setValue(num/total_num *100)
-                    QtWidgets.QApplication.processEvents()
-                    # time.sleep(0.05)
-
-        def GetInfo(self):
-            path_req = self.get_directory_path
-            time_info = str(self.dateEdit1.dateTime().toPython())[:-7]
-            n_time11 = time.strptime(time_info, "%Y-%m-%d %H:%M:%S")
-            n_time1 = int(time.strftime('%Y%m%d%H%M%S', n_time11))
-            text_name = self.lin_2.text()
-            # print("time_info：",time_info)
-            # print("text_name:",text_name,bool(text_name))
-            # print("n_time1:",n_time1)
-            # print("path_req",path_req)
-            if not path_req :
-                QtWidgets.QMessageBox.warning(self, '错误',"请选择非空目录！！")
-            else:
-                if glob.glob(path_req+"/*bmp") or glob.glob(path_req+"/*jpg"):
-                    if text_name and not self.isInZh(str(text_name)):
-                        if glob.glob(path_req + "/*bmp"):
-                            self.renameFiles(path_req, "bmp", n_time1, text_name, 0)
-                        if glob.glob(path_req + "/*jpg"):
-                            self.renameFiles(path_req, "jpg", n_time1, text_name, 0)
-
-                        reply = QtWidgets.QMessageBox.question(self, '提示',
-                                                     "重命名完成，是否进行页面跳转", QtWidgets.QMessageBox.Yes |
-                                                     QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-                        if reply == QtWidgets.QMessageBox.Yes:
-                            self.switchWin()
-                    elif self.isInZh(str(text_name)):
-                        QtWidgets.QMessageBox.warning(self, '错误',"请按照格式输入！！",)
-                    else:
-                        QtWidgets.QMessageBox.warning(self, '错误',"请在标注者中输入身份！",)
-                else:
-                    QtWidgets.QMessageBox.warning(self, '错误', "请选择更改名称的图片所在目录！！", )
-
-        def initUI(self):
-            #创建一个进度条
-            self.pbar = QtWidgets.QProgressBar(self)
-            self.pbar.setMinimum(0)  # 设置进度条最小值
-            self.pbar.setMaximum(100)  # 设置进度条最大值
-            self.pbar.setValue(0)  # 进度条初始值为0
-            self.pbar.setGeometry(350, 300, 250, 30)
-
-            #创建一个菜单
-            self.MenuBtn =QtWidgets.QPushButton("选项",self)
-            #创建一个菜单对象
-            self.Menu = QtWidgets.QMenu()
-            #菜单中的选项
-            ch_action = QtWidgets.QAction('修改文件名',self)  # 创建对象
-            ch_action.triggered.connect(self.GetInfo)
-            cls_action = QtWidgets.QAction('分类格式', self)  # 创建对象
-            cls_action.triggered.connect(self.chackPath)
-            det_action = QtWidgets.QAction('检测格式', self)  # 创建对象
-            # new_action.triggered.connect(lambda: print("关机"))
-            yl_action = QtWidgets.QAction('YOLO格式', self)  # 创建对象
-            # new_action.triggered.connect(lambda: print("关机"))
-            seg_action = QtWidgets.QAction('分割格式', self)  # 创建对象
-            # new_action.triggered.connect(lambda: print("关机"))
-
-            self.Menu.addActions([ch_action,cls_action,det_action,yl_action,seg_action])  # 将图标添加到菜单中
-            self.MenuBtn.setMenu(self.Menu)  # 将菜单添加到按键中
-
-            self.btsec = QtWidgets.QPushButton("选择文件夹", self)
-            self.btsec.clicked.connect(self.openFile)
-            """
-            self.btok = QtWidgets.QPushButton("修改文件名", self)
-            self.btok.clicked.connect(self.GetInfo)
-            #获取训练数据
-            self.btcls = QtWidgets.QPushButton("分类格式", self)
-            # self.btok.clicked.connect(self.GetInfo)
-            self.btdet = QtWidgets.QPushButton("检测格式", self)
-            self.btyl = QtWidgets.QPushButton("YOLO格式", self)
-            self.btmask = QtWidgets.QPushButton("分割格式", self)
-            """
-
-            self.btno = QtWidgets.QPushButton("跳转", self)
-            self.btno.clicked.connect(self.switchWin)
-
-
-            self.btsec.move(100,300)
-            self.MenuBtn.move(250,300)
-            '''
-            self.btok.move(250, 200)
-            self.btcls.move(250,1.5*self.btcls.height()+self.btok.y())
-            self.btdet.move(250,1.5*self.btdet.height()+self.btcls.y())
-            self.btyl.move(250,1.5*self.btyl.height()+self.btdet.y())
-            self.btmask.move(250,1.5*self.btmask.height()+self.btyl.y())
-            '''
-            self.btno.move(self.btsec.x(),310+self.btno.height())
-            #
-            self.label1 = QtWidgets.QLabel('标注时间:',self)
-            self.dateEdit1 = QtWidgets.QDateTimeEdit(QtCore.QDateTime.currentDateTime(), self)
-            self.dateEdit1.setDisplayFormat('yyyy-MM-dd HH:mm:ss')
-            self.dateEdit1.resize(200,30)
-            self.dateEdit1.move(self.width()//3,self.height()//6)
-            self.label1.resize(100, 30)
-            self.label1.move(self.dateEdit1.x()-0.7*self.label1.width(),self.dateEdit1.y())
-
-            #
-            self.label2 = QtWidgets.QLabel('标注者:', self)
-            self.label2.move(self.label1.x(),self.dateEdit1.y()+self.dateEdit1.height()*2)
-            self.lin_2 = QtWidgets.QLineEdit(self)
-            self.lin_2.setPlaceholderText('请使用英文或者拼音！！')
-            self.lin_2.resize(200,30)
-            self.lin_2.move(self.label2.x()+0.7*self.label2.width(),self.label2.y())
-            self.setGeometry(300, 300, 600, 500)
-            self.setWindowTitle('标注工具[测试版本v1.0.0]:BKVISION')
-
-            #固定窗口大小
-            self.setFixedSize(self.width(),self.height())
-            self.show()
     #标注窗口
     win = MainWindow(
         config=config,
@@ -663,6 +499,7 @@ def main():
 
         def GenVOCDate(self):
             self.GetBBox(mold="VOC")
+
         def GenYOLODate(self):
             self.GetBBox(mold="YOLO")
 
@@ -809,7 +646,6 @@ def main():
                 self.pbar.setValue(image_index / total_num * 100)
                 QtWidgets.QApplication.processEvents()
                 # time.sleep(0.05)
-
 
         def write_txt(self,img,boxes,txt_path,img_path,class_name):
             #坐标转换
