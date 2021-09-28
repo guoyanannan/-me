@@ -2232,6 +2232,7 @@ class MainWindow(QtWidgets.QMainWindow):
                            'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
                            'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
                            'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                           'YiWuYaRu','TuBao','LaSiYaRu','ZongXiangHuaShang',
                            ]
             self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
                            '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
@@ -2240,6 +2241,7 @@ class MainWindow(QtWidgets.QMainWindow):
                            '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
                            '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
                            '边缘毛刺', '过曝光', '锈皮脱落', '擦疤', '背景七', '背景八',
+                           '异物压入','凸包','拉丝压入','纵向划伤',
                            ]
             self.labelDialog = LabelDialog(
                 currentType='热轧',
@@ -2270,6 +2272,7 @@ class MainWindow(QtWidgets.QMainWindow):
                            'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
                            'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
                            'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                           'YiWuYaRu', 'TuBao', 'LaSiYaRu', 'ZongXiangHuaShang',
                            ]
             self.ChiCls = ['待分类', '精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物',
                            '剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕',
@@ -2278,6 +2281,7 @@ class MainWindow(QtWidgets.QMainWindow):
                            '曝光印痕', '停止竖线', '白铁鳞', '背景一', '背景二', '背景三',
                            '背景四', '起皮', '头尾边', '边缘破裂', '背景五', '背景六',
                            '边缘毛刺', '过曝光', '锈皮脱落', '擦疤', '背景七', '背景八',
+                           '异物压入', '凸包', '拉丝压入', '纵向划伤',
                            ]
             self.labelDialog = LabelDialog(
                 currentType='热轧',

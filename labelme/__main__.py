@@ -270,13 +270,14 @@ def main():
                        ]
             elif "热" in PType:
                 EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                       'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
-                       ]
+                               'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
+                               'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
+                               'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
+                               'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
+                               'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
+                               'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
+                               'YiWuYaRu', 'TuBao', 'LaSiYaRu', 'ZongXiangHuaShang',
+                               ]
             elif "符" in PType:
                 EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
                           'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
@@ -757,7 +758,10 @@ def main():
             path_req = self.get_directory_path
             # print(str(self.dateEdit1.dateTime().toPyDateTime()))
             # print(help(self.dateEdit1.dateTime()))
-            time_info = str(self.dateEdit1.dateTime().toPyDateTime())[:-7]
+            try:
+                time_info = str(self.dateEdit1.dateTime().toPyDateTime())[:-7]
+            except:
+                time_info = str(self.dateEdit1.dateTime().toPython())[:-7]
             n_time11 = time.strptime(time_info, "%Y-%m-%d %H:%M:%S")
             n_time1 = int(time.strftime('%Y%m%d%H%M%S', n_time11))
             text_name = self.lin_2.text()

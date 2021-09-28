@@ -293,14 +293,14 @@ class LabelDialog(QtWidgets.QDialog):
                 self.cb4.setCurrentText(self.edit4.text())
 
             elif text == text_cb and text1 == text1_cb and text2 == text2_cb and text3 == text3_cb and text4 == text4_cb:
-                # print('全部相等时',self.countFlag)
-                # if self.countFlag >=1:
-                #     self.accept()
-                #     self.countFlag =0
-                # else:
-                #     self.countFlag +=1
                 print('全部相等时',self.countFlag)
-                self.accept()
+                if self.countFlag >=1:
+                    self.accept()
+                    self.countFlag =0
+                else:
+                    self.countFlag +=1
+                # print('全部相等时',self.countFlag)
+                # self.accept()
 
 
         elif not text or not text1:
