@@ -2,7 +2,6 @@
 
 # -*- coding: utf-8 -*-
 
-
 import sys
 from qtpy import QtWidgets
 from qtpy.QtGui import QFont#QtWidgets不包含QFont必须调用QtGui

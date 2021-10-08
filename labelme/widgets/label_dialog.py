@@ -203,7 +203,6 @@ class LabelDialog(QtWidgets.QDialog):
         bb.button(bb.Cancel).setIcon(labelme.utils.newIcon("undo"))
         bb.accepted.connect(self.validate)
         bb.rejected.connect(self.reject)
-
         layout.addWidget(bb)
         # label_list
         self.labelList = QtWidgets.QListWidget()
