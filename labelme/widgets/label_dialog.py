@@ -17,12 +17,15 @@ QT5 = QT_VERSION[0] == "5"
 
 
 class LabelQLineEdit(QtWidgets.QLineEdit):
+
     def setListWidget(self, list_widget):
         self.list_widget = list_widget
 
     def keyPressEvent(self, e):
+
         if e.key() != QtCore.Qt.Key_Return:
             if e.key() in [QtCore.Qt.Key_Up, QtCore.Qt.Key_Down]:
+                print('按键up和down')
                 self.list_widget.keyPressEvent(e)
             else:
                 super(LabelQLineEdit, self).keyPressEvent(e)
@@ -195,9 +198,12 @@ class LabelDialog(QtWidgets.QDialog):
         )
         #设置图标
         bb.button(bb.Ok).setIcon(labelme.utils.newIcon("done"))
+        bb.button(bb.Ok).setShortcut(QtCore.Qt.Key_Return) #增加enter触发事件
+        # bb.button(bb.Ok).setShortcut(QtCore.Qt.Key_Space) #增加enter触发事件
         bb.button(bb.Cancel).setIcon(labelme.utils.newIcon("undo"))
         bb.accepted.connect(self.validate)
         bb.rejected.connect(self.reject)
+
         layout.addWidget(bb)
         # label_list
         self.labelList = QtWidgets.QListWidget()
@@ -221,6 +227,10 @@ class LabelDialog(QtWidgets.QDialog):
         self.labelList.currentItemChanged.connect(self.labelSelected)
         self.labelList.itemDoubleClicked.connect(self.labelDoubleClicked)
         self.edit.setListWidget(self.labelList)
+        self.edit1.setListWidget(self.labelList)
+        self.edit2.setListWidget(self.labelList)
+        self.edit3.setListWidget(self.labelList)
+        self.edit4.setListWidget(self.labelList)
         layout.addWidget(self.labelList)
         # label_flags
         if flags is None:

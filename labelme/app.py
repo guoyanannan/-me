@@ -323,7 +323,7 @@ class MainWindow(QtWidgets.QMainWindow):
             checkable=True,
             enabled=True,
         )
-        saveAuto.setChecked(self._config["auto_save"])
+        saveAuto.setChecked(not self._config["auto_save"])
 
 
         saveWithImageData = action(
@@ -332,7 +332,7 @@ class MainWindow(QtWidgets.QMainWindow):
             slot=self.enableSaveImageWithData,
             tip="Save image data in label file",
             checkable=True,
-            checked=self._config["store_data"],
+            checked=False,
         )
 
         close = action(
@@ -1522,7 +1522,8 @@ class MainWindow(QtWidgets.QMainWindow):
             flags[key] = flag
         try:
             imagePath = osp.relpath(self.imagePath, osp.dirname(filename))
-            imageData = self.imageData if self._config["store_data"] else None
+            # imageData = self.imageData if self._config["store_data"] else None
+            imageData = None if self._config["store_data"] else self.imageData
             if osp.dirname(filename) and not osp.exists(osp.dirname(filename)):
                 os.makedirs(osp.dirname(filename))
             lf.save(
