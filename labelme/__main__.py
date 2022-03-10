@@ -12,6 +12,9 @@ import time
 import glob
 import cv2
 import imgviz
+import json
+import base64
+from Crypto.Cipher import AES
 import numpy as np
 import xml.etree.ElementTree as ET
 from xml.dom.minidom import Document
@@ -26,6 +29,27 @@ from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon
 
+
+# str不是16的倍数那就补足为16的倍数
+def add_to_16(value):
+    while len(value) % 16 != 0:
+        value += '\0'
+    return str.encode(value)  # 返回byte
+
+def decrypt_ase(path):
+    # 秘钥
+    key = 'Nercar701'
+    # 密文
+    with open(path, 'r', encoding='utf-8') as banks:
+        text = banks.read()
+    # 初始化加密器
+    aes = AES.new(add_to_16(key), AES.MODE_ECB)
+    # 优先逆向解密base64成bytes
+    base64_decrypted = base64.decodebytes(text.encode(encoding='utf-8'))
+    # bytes解密
+    decrypted_text = str(aes.decrypt(base64_decrypted),encoding='utf-8') # 执行解密密并转码返回str
+    decrypted_text = base64.b64decode(decrypted_text.encode('utf-8')).decode('utf-8')
+    return json.loads(decrypted_text)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -182,8 +206,17 @@ def main():
     app.setWindowIcon(newIcon("icon"))
     # 汉化
     # app.installTranslator(translator)
+    #解密文件得到钢种缺陷类别信息
+    try:
+        class_names = decrypt_ase('bankdata.bin')
+    except:
+        QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(),'错误', f"缺少.bin文件,请检查当前目录{os.getcwd()}")
+        sys.exit()
+
+
     #标注窗口
     win = MainWindow(
+        class_dict=class_names,
         config=config,
         filename=filename,
         output_file=output_file,
@@ -198,9 +231,10 @@ def main():
 
     #
     class First(QtWidgets.QMainWindow):
-        def __init__(self,win):
+        def __init__(self,win,class_names):
             super().__init__()
             self.win = win
+            self.class_info_dict = class_names
             self.get_directory_path = None
             self.initUI()
 
@@ -240,51 +274,17 @@ def main():
             if not JsonPaths or not ImgPaths:
                 return
             if "板" in PType:
-                EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
-                       'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
-                       'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
-                       'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
-                       'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
-                       ]
+                EngCls = self.class_info_dict['板材']['英文']
             elif "棒" in PType:
-                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                       'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
-                       'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
-                       ]
+                EngCls = self.class_info_dict['棒材']['英文']
             elif "铸" in PType:
-                EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
-                       'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
-                       ]
+                EngCls = self.class_info_dict['铸坯']['英文']
             elif "冷" in PType:
-                EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
-                       'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
-                       'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
-                       'AoKeng','BianSiLaRu','ZaoShang','TingJiWenLi','ZaoShangFenSuan','JianDuanReZhaGuaShang',
-                       'SuanYinHuLue','XianXingJiaZa','YanZhongYangHuaPiTuoLuoHen','YaHen','YangHuaPiTuoLuoHenHuLue','HanFeng',
-                       'CengJianCaShang','CengJianCaShangYi','ErLeiReZhaGuaShang','LieBian','ShuiYin','BianBuHuLue',
-                       ]
+                EngCls = self.class_info_dict['冷轧']['英文']
             elif "热" in PType:
-                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                               'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                               'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                               'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                               'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                               'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                               'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
-                               'YiWuYaRu', 'TuBao', 'LaSiYaRu', 'ZongXiangHuaShang',
-                               ]
+                EngCls = self.class_info_dict['热轧']['英文']
             elif "符" in PType:
-                EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
-                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
-                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
-                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
-                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
-                          'u','v','w','x','y','z']
+                EngCls = self.class_info_dict['字符']['英文']
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
@@ -381,50 +381,17 @@ def main():
             if not os.path.exists(save_msk_dir_rgb):
                 os.makedirs(save_msk_dir_rgb)
             if "板" in PType:
-                EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
-                       'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
-                       'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
-                       'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
-                       'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
-                       ]
+                EngCls = self.class_info_dict['板材']['英文']
             elif "棒" in PType:
-                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                       'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
-                       'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
-                       ]
+                EngCls = self.class_info_dict['棒材']['英文']
             elif "铸" in PType:
-                EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
-                       'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
-                       ]
+                EngCls = self.class_info_dict['铸坯']['英文']
             elif "冷" in PType:
-                EngCls = ['BeiJing','ZhengMianQueXian','ErLeiTuoPi','ErLeiTuoPiYi','YiWuYaRu','XiuDian',
-                       'BaHen','SuanYin','BianBuZhaXiu','TuoPi','BaoGuangSeCha','ReZhaGuaShang',
-                       'YangHuaPiTuoLuoHen','TuiXiGuaShang','HeiDai','SuanXiBuZu','ReGunYin','ZangWu',
-                       'AoKeng','BianSiLaRu','ZaoShang','TingJiWenLi','ZaoShangFenSuan','JianDuanReZhaGuaShang',
-                       'SuanYinHuLue','XianXingJiaZa','YanZhongYangHuaPiTuoLuoHen','YaHen','YangHuaPiTuoLuoHenHuLue','HanFeng',
-                       'CengJianCaShang','CengJianCaShangYi','ErLeiReZhaGuaShang','LieBian','ShuiYin','BianBuHuLue',
-                       ]
+                EngCls = self.class_info_dict['冷轧']['英文']
             elif "热" in PType:
-                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                       'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                       'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                       'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                       'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                       'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                       'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
-                       ]
+                EngCls = self.class_info_dict['热轧']['英文']
             elif "符" in PType:
-                EngCls = ['BeiJing','0','1','2','3','4','5','6','7','8','9',
-                          'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
-                          'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
-                          '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
-                          'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
-                          'u','v','w','x','y','z']
+                EngCls = self.class_info_dict['字符']['英文']
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
@@ -534,52 +501,17 @@ def main():
                 os.makedirs(save_Ann_dir_back)
 
             if "板" in PType:
-                EngCls = ['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
-                          'YaKeng', 'QiaoPi', 'XianXingQueXian', 'HuaShang', 'YaHen', 'ShuiDi',
-                          'PingBiBianBu', 'PingBiTouWei', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan', 'BeiJingSi',
-                          'BeiJingWu', 'BeiJingLiu', 'BeiJingQi', 'BeiJingBa', 'MaDian', 'YiWuYaRu',
-                          'ShuiWen', 'JieBa', 'YangHuaTiePi', 'XianXingQueXianYi', 'YiSiYiWuYaRu',
-                          ]
+                EngCls = self.class_info_dict['板材']['英文']
             elif "棒" in PType:
-                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                          'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                          'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                          'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                          'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                          'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                          'BeiJingQi', 'BianYuanMaoCi', 'GuoBaoGuang', 'BeiJingBa', 'BeiJingJiu', 'BeiJingShi',
-                          'BeiJingShiYi', 'XiuPiTuoLuo', 'AoKeng', 'ErDuo', 'HuaShang', 'BeiJing',
-                          ]
+                EngCls = self.class_info_dict['棒材']['英文']
             elif "铸" in PType:
-                EngCls = ['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
-                          'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen',
-                          ]
+                EngCls = self.class_info_dict['铸坯']['英文']
             elif "冷" in PType:
-                EngCls = ['BeiJing', 'ZhengMianQueXian', 'ErLeiTuoPi', 'ErLeiTuoPiYi', 'YiWuYaRu', 'XiuDian',
-                          'BaHen', 'SuanYin', 'BianBuZhaXiu', 'TuoPi', 'BaoGuangSeCha', 'ReZhaGuaShang',
-                          'YangHuaPiTuoLuoHen', 'TuiXiGuaShang', 'HeiDai', 'SuanXiBuZu', 'ReGunYin', 'ZangWu',
-                          'AoKeng', 'BianSiLaRu', 'ZaoShang', 'TingJiWenLi', 'ZaoShangFenSuan', 'JianDuanReZhaGuaShang',
-                          'SuanYinHuLue', 'XianXingJiaZa', 'YanZhongYangHuaPiTuoLuoHen', 'YaHen',
-                          'YangHuaPiTuoLuoHenHuLue', 'HanFeng',
-                          'CengJianCaShang', 'CengJianCaShangYi', 'ErLeiReZhaGuaShang', 'LieBian', 'ShuiYin',
-                          'BianBuHuLue',
-                          ]
+                EngCls = self.class_info_dict['冷轧']['英文']
             elif "热" in PType:
-                EngCls = ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
-                          'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
-                          'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
-                          'ZhenHen', 'PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin',
-                          'BaoGuangYinHen', 'TingZhiShuXian', 'BaiTieLin', 'BeiJingYi', 'BeiJingEr', 'BeiJingSan',
-                          'BeiJingSi', 'QiPi', 'TouWeiBian', 'BianYuanPoLie', 'BeiJingWu', 'BeiJingLiu',
-                          'BianYuanMaoCi', 'GuoBaoGuang', 'XiuPiTuoLuo', 'CaBa', 'BeiJingQi', 'BeiJingBa',
-                          ]
+                EngCls = self.class_info_dict['热轧']['英文']
             elif "符" in PType:
-                EngCls = ['BeiJing', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                          'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'G', 'K', 'L', 'M', 'N',
-                          'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '!', '@',
-                          '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 'a', 'b', 'c', 'd', 'e',
-                          'f', 'g', 'h', 'i', 'g', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-                          'u', 'v', 'w', 'x', 'y', 'z']
+                EngCls = self.class_info_dict['字符']['英文']
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
@@ -866,7 +798,7 @@ def main():
             self.setFixedSize(self.width(),self.height())
             self.show()
 
-    one_win = First(win)
+    one_win = First(win,class_names)
     one_win.show()
     sys.exit(app.exec_())
 
