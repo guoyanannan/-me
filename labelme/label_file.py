@@ -36,12 +36,12 @@ class LabelFile(object):
 
     suffix = ".json"
 
-    def __init__(self, filename=None):
+    def __init__(self, filename=None, imgs_dir=None):
         self.shapes = []
         self.imagePath = None
         self.imageData = None
         if filename is not None:
-            self.load(filename)
+            self.load(filename,imgs_dir)
         self.filename = filename
 
     @staticmethod
@@ -67,7 +67,7 @@ class LabelFile(object):
             f.seek(0)
             return f.read()
 
-    def load(self, filename):
+    def load(self, filename, imgs_dir=None):
         keys = [
             "version",
             "imageData",
@@ -91,6 +91,7 @@ class LabelFile(object):
         try:
             with open(filename, "r") as f:
                 data = json.load(f)
+                ##print('data',data)
             version = data.get("version")
             if version is None:
                 logger.warn(
@@ -113,7 +114,11 @@ class LabelFile(object):
                     imageData = utils.img_data_to_png_data(imageData)
             else:
                 # relative path from label file to relative path from cwd
-                imagePath = osp.join(osp.dirname(filename), data["imagePath"])
+                if imgs_dir is None:
+                    imagePath = osp.join(osp.dirname(filename), data["imagePath"])
+                else:
+                    imagePath = osp.join(imgs_dir,data["imagePath"])
+                ##print('imagePath:', imagePath)
                 imageData = self.load_image_file(imagePath)
             flags = data.get("flags") or {}
             imagePath = data["imagePath"]

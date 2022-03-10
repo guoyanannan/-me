@@ -25,7 +25,7 @@ class LabelQLineEdit(QtWidgets.QLineEdit):
 
         if e.key() != QtCore.Qt.Key_Return:
             if e.key() in [QtCore.Qt.Key_Up, QtCore.Qt.Key_Down]:
-                print('按键up和down')
+                # print('按键up和down')
                 self.list_widget.keyPressEvent(e)
             else:
                 super(LabelQLineEdit, self).keyPressEvent(e)
@@ -132,7 +132,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit4.editingFinished.connect(self.postProcess_three)
         # self.edit4.textChanged.connect(self.postProcess_three)
         if flags:
-            print('if flags:',flags)
+            # print('if flags:',flags)
             self.edit.textChanged.connect(self.updateFlags)
         self.edit_group_id = QtWidgets.QLineEdit()
         self.edit_group_id.setPlaceholderText("Group ID,选填项,用于分组！！！")
@@ -302,7 +302,7 @@ class LabelDialog(QtWidgets.QDialog):
                 self.cb4.setCurrentText(self.edit4.text())
 
             elif text == text_cb and text1 == text1_cb and text2 == text2_cb and text3 == text3_cb and text4 == text4_cb:
-                print('全部相等时',self.countFlag)
+                # print('全部相等时',self.countFlag)
                 if self.countFlag >=1:
                     self.accept()
                     self.countFlag =0
@@ -397,7 +397,7 @@ class LabelDialog(QtWidgets.QDialog):
         self.edit1.setSelection(0, len(text1))
 
     def postProcess_edit(self):
-        print('进入postProcess_edit函数')
+        # print('进入postProcess_edit函数')
         # print(str(self.edit.text()))
         text = self.edit.text()
         if text:
@@ -462,8 +462,8 @@ class LabelDialog(QtWidgets.QDialog):
         # #print('是否添加成功耶：',bool(self.cb.setCurrentText(text)))
 
     def postProcess_edit1(self):
-        print('进入postProcess_edit1函数')
-        print(str(self.edit1.text()))
+        # print('进入postProcess_edit1函数')
+        # print(str(self.edit1.text()))
         text1 = self.edit1.text()
         if text1:
             if hasattr(text1, "strip"):
@@ -490,41 +490,41 @@ class LabelDialog(QtWidgets.QDialog):
             return
     def updateFlags1(self, label_new):
         # keep state of shared flags
-        print('updateFlags1-当前文本框：',self.edit.text())
+        # print('updateFlags1-当前文本框：',self.edit.text())
         if self.edit.text() in self.eng_list:
             self.edit1.setText(self.chi_list[self.eng_list.index(self.edit.text())])
         #print('进入updateFlags1函数')
         flags_old = self.getFlags()
-        print('flags_old:',flags_old)
+        # print('flags_old:',flags_old)
         flags_new = {}
         for pattern, keys in self._flags.items():
             if re.match(pattern, label_new):
                 for key in keys:
                     flags_new[key] = flags_old.get(key, False)
-        print('flags_new:',flags_new)
+        # print('flags_new:',flags_new)
         self.setFlags(flags_new)
     def updateFlags(self, label_new):
         # keep state of shared flags
-        print('进入updateFlags函数')
+        # print('进入updateFlags函数')
         flags_old = self.getFlags()
-        print('flags_old:',flags_old)
+        # print('flags_old:',flags_old)
         flags_new = {}
         for pattern, keys in self._flags.items():
             if re.match(pattern, label_new):
                 for key in keys:
                     flags_new[key] = flags_old.get(key, False)
-        print('flags_new:',flags_new)
+        # print('flags_new:',flags_new)
         self.setFlags(flags_new)
 
     def deleteFlags(self):
-        print('进入deleteFlags函数')
+        # print('进入deleteFlags函数')
         for i in reversed(range(self.flagsLayout.count())):
             item = self.flagsLayout.itemAt(i).widget()
             self.flagsLayout.removeWidget(item)
             item.setParent(None)
 
     def resetFlags(self, label=""):
-        print('进入resetFlags函数')
+        # print('进入resetFlags函数')
         flags = {}
         for pattern, keys in self._flags.items():
             if re.match(pattern, label):
@@ -533,9 +533,9 @@ class LabelDialog(QtWidgets.QDialog):
         self.setFlags(flags)
 
     def setFlags(self, flags):
-        print('进入setFlags函数')
+        # print('进入setFlags函数')
         self.deleteFlags()
-        print('setFlags',flags)
+        # print('setFlags',flags)
         for key in flags:
             item = QtWidgets.QCheckBox(key, self)
             item.setChecked(flags[key])
@@ -543,12 +543,12 @@ class LabelDialog(QtWidgets.QDialog):
             item.show()
 
     def getFlags(self):
-        print('进入getFlags函数')
+        # print('进入getFlags函数')
         flags = {}
         for i in range(self.flagsLayout.count()):
             item = self.flagsLayout.itemAt(i).widget()
             flags[item.text()] = item.isChecked()
-        print('getFlags',flags)
+        # print('getFlags',flags)
         return flags
 
     def getGroupId(self):
@@ -567,9 +567,9 @@ class LabelDialog(QtWidgets.QDialog):
                 self.labelList.sizeHintForColumn(0) + 2
             )
         # if text is None, the previous label in self.edit is kept
-        print('currren:',text ,text_ch , text_dif , text_imgdif , text_objdif)
+        # print('currren:',text ,text_ch , text_dif , text_imgdif , text_objdif)
         if text is None:
-            print('text是None时text的值:', text)
+            # print('text是None时text的值:', text)
             # #origin
             # text = self.edit.text()
             # text1 = self.edit1.text()
@@ -593,7 +593,7 @@ class LabelDialog(QtWidgets.QDialog):
 
 
         elif text and text_ch and text_dif and text_imgdif and text_objdif:
-            print('text非空时:')
+            # print('text非空时:')
             # print(text)
             #
             text = text
@@ -601,7 +601,7 @@ class LabelDialog(QtWidgets.QDialog):
             text2 = text_dif
             text3 = text_objdif
             text4 = text_imgdif
-            print(text,text1,text2,text3,text4)
+            # print(text,text1,text2,text3,text4)
             # '''
             # # # 下拉框
             # # text5 = self.cb.currentText()
@@ -644,7 +644,7 @@ class LabelDialog(QtWidgets.QDialog):
             #     self.edit4.setText('9')
                 #print('info：',self.edit.text(),self.edit1.text(),self.edit2.text(),self.edit3.text(),self.edit4.text(),)
         else:
-            print('text非空时1或2或3或4为空:')
+            # print('text非空时1或2或3或4为空:')
             self.edit.setText(text)
             self.edit1.setText(self.chi_list[self.eng_list.index(text)])
             self.edit2.setText('9')
@@ -652,7 +652,7 @@ class LabelDialog(QtWidgets.QDialog):
             self.edit4.setText('9')
 
 
-        print('pup:',flags)
+        #print('pup:',flags)
         if flags:
             self.setFlags(flags)
         else:
@@ -688,7 +688,7 @@ class LabelDialog(QtWidgets.QDialog):
         if move:
             self.move(QtGui.QCursor.pos())
         if self.exec_():
-            print('点击ok？？？？？？')
+            # print('点击ok？？？？？？')
             # if not self.edit.text():
             #     self.edit.editingFinished.connect(self.postProcess_edit)
             # if not self.edit1.text():

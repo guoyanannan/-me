@@ -315,6 +315,7 @@ def main():
                     ImgMat = ImagePath.split('/')[-1].split('.')[1]
 
                 ImgSrc = Image.open(ImagePath).convert('L')
+                ImgW, ImgH = ImgSrc.size
                 data = json.load(open(JsonPath,'r',encoding='utf8'))
                 shapeList = data['shapes']
                 #print(shapeList)
@@ -328,16 +329,29 @@ def main():
                         continue
                     Subfolder = os.path.join(Save_dir, className)
                     Roi_path = os.path.join(Subfolder, ImgName + "_" + str(Roi_index) + f".{ImgMat}")
-                    if shape['shape_type']=='rectangle':
+                    if shape['shape_type'] == 'rectangle':
                         if not os.path.exists(Subfolder):
                             os.makedirs(Subfolder)
-                        Roi_pil = ImgSrc.crop((points[0][0],points[0][1],points[1][0],points[1][1]))
+                        x1, y1, x2, y2 = (points[0][0],points[0][1],points[1][0],points[1][1])
+                        x1_temp = min(x1,x2)-100
+                        y1_temp = min(y1,y1)-100
+                        x2_temp = max(x1,x2)+100
+                        y2_temp = max(y1,y1)+100
+                        if x1_temp <= 0:
+                            x1_temp = 0
+                        if x2_temp >= ImgW:
+                            x2_temp = ImgW
+                        if y1_temp <= 0:
+                            y1_temp = 0
+                        if y2_temp >=ImgH:
+                            y2_temp = ImgH
+                        x1,y1,x2,y2 = x1_temp,y1_temp,x2_temp,y2_temp
+                        Roi_pil = ImgSrc.crop((x1,y1,x2,y2))
                         Roi_pil.save(Roi_path)
                         Roi_index += 1
                     elif shape['shape_type']=='polygon':
                         if not os.path.exists(Subfolder):
                             os.makedirs(Subfolder)
-                        ImgW,ImgH = ImgSrc.size
 
                         x,y,w,h = cv2.boundingRect(np.array(points).astype('int'))
                         x1,y1,x2,y2 = x-100,y-100,x+w+100,y+h+100
@@ -559,11 +573,16 @@ def main():
                     if shape['shape_type'] == 'rectangle':
                         points = shape['points']
                         x1,y1,x2,y2 = points[0][0],points[0][1],points[1][0],points[1][1]
+                        x1_tmp = min(x1,x2)
+                        y1_tmp = min(y1,y2)
+                        x2_tmp = max(x1,x2)
+                        y2_tmp = max(y1,y2)
+                        x1, y1, x2, y2 = x1_tmp, y1_tmp, x2_tmp, y2_tmp
                         className = shape["label"]
                         if str(className) not in EngCls:
                             QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
                             continue
-                        box_info.append([x1,y1,x2,y2,className])
+                        box_info.append([x1, y1, x2, y2, className])
 
                 if len(box_info) == 0:
                     ImagePIL.save(img_save_path_2)

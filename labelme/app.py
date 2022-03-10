@@ -1064,7 +1064,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.labelList.clear()
         self.loadShapes(self.canvas.shapes)
         self.actions.undo.setEnabled(self.canvas.isShapeRestorable)
-        print('撤销按钮是否变黑：',self.canvas.isShapeRestorable)
+        # print('撤销按钮是否变黑：',self.canvas.isShapeRestorable)
         self.actions.save.setEnabled(True)
 
     def tutorial(self):
@@ -1228,7 +1228,7 @@ class MainWindow(QtWidgets.QMainWindow):
             t_objdef = shape.label_objdif
         except:
             t_objdef = shape.obj_definition
-        print('>>>>>11111111111')
+        # print('>>>>>11111111111')
         text, flags, group_id,text_ch,text_dif,text_objdif,text_imgdif = self.labelDialog.popUp(
             text=shape.label,
             flags=shape.flags,
@@ -1238,7 +1238,7 @@ class MainWindow(QtWidgets.QMainWindow):
             text_imgdif=t_imgdef,
             text_objdif=t_objdef,
         )
-        print('11111111111<<<<<<<<<<<<<<<')
+        # print('11111111111<<<<<<<<<<<<<<<')
         if text is None:
             return
         if not self.validateLabel(text):
@@ -1341,7 +1341,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 text_objdif = shape.obj_definition
 
             #text = text0 +" "+ text_ch +" "+ text_dif+" " + text_imgdif
-            print('addLabel',text,text_ch,text_dif,text_objdif,text_imgdif)
+            # print('addLabel',text,text_ch,text_dif,text_objdif,text_imgdif)
         else:
             text = "{} ({})".format(shape.label, shape.group_id)
             # text = "{}{}{} ({})".format(shape.label,shape.label_ch, shape.label_dif,shape.group_id)
@@ -1351,7 +1351,7 @@ class MainWindow(QtWidgets.QMainWindow):
         shape.confidence = text_dif
         shape.obj_definition = text_objdif
         shape.definition = text_imgdif
-        print('addLabel_shape_one:',shape.label,shape.chineselabel,shape.confidence,shape.obj_definition,shape.definition)
+        # print('addLabel_shape_one:',shape.label,shape.chineselabel,shape.confidence,shape.obj_definition,shape.definition)
 
         label_list_item = LabelListWidgetItem(text, shape)
         # print(label_list_item)
@@ -1491,21 +1491,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
             return data
         shapes = [format_shape(item.shape()) for item in self.labelList]
-        print('shapes：',shapes)
-        print('item.shape()：')
-        print([item.shape() for item in self.labelList])
+        # print('shapes：',shapes)
+        # print('item.shape()：')
+        # print([item.shape() for item in self.labelList])
         img_defi = ''
         try:
             img_defi = [item.shape().label_imgdif for item in self.labelList][-1]
-            print('try_img_defi：',img_defi)
+            # print('try_img_defi：',img_defi)
         except:
             info_decide = [item.shape().definition for item in self.labelList]
-            print('except_info_decide：', info_decide)
+            # print('except_info_decide：', info_decide)
             if len(info_decide) != 0:
                 img_defi = [item.shape().definition for item in self.labelList][-1]
             elif len(info_decide) == 0:
                 img_defi = '9'
-            print('except_img_defi：',img_defi)
+            # print('except_img_defi：',img_defi)
         flags = {}
         for i in range(self.flag_widget.count()):
             item = self.flag_widget.item(i)
@@ -1579,7 +1579,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # Callback functions:
 
     def newShape(self):
-        # print('进入newShape')
+        # print('进入newShape函数')
         """Pop-up and give focus to the label editor.
 
         position MUST be in global coordinates.
@@ -1594,11 +1594,11 @@ class MainWindow(QtWidgets.QMainWindow):
             previous_text = self.labelDialog.edit.text()
             # previous_text1 = self.labelDialog.edit1.text()
             #标注框停留位置and输入标签停留地
-            print('>>>>>>>>>2222222222222222222')
+            # print('>>>>>>>>>2222222222222222222')
             text, flags, group_id,text_ch,text_dif,text_objdif,text_imgdif = self.labelDialog.popUp(text)
-            print(text, flags, group_id,text_ch,text_dif,text_objdif,text_imgdif)
+            # print(text, flags, group_id,text_ch,text_dif,text_objdif,text_imgdif)
             self.ch_name = text_ch
-            print('2222222222222222<<<<<<<<<<<<<<')
+            # print('2222222222222222<<<<<<<<<<<<<<')
             if not text:
                 # pass
                 self.labelDialog.edit.setText(previous_text)
@@ -1744,6 +1744,8 @@ class MainWindow(QtWidgets.QMainWindow):
         # assumes same name, but json extension
         self.status(self.tr("Loading %s...") % osp.basename(str(filename)))
         label_file = osp.splitext(filename)[0] + ".json"
+        img_dir = filename.split('\\')[0]
+        ##print('img_dir:',img_dir)
         if self.output_dir:
             label_file_without_path = osp.basename(label_file)
             label_file = osp.join(self.output_dir, label_file_without_path)
@@ -1751,7 +1753,8 @@ class MainWindow(QtWidgets.QMainWindow):
             label_file
         ):
             try:
-                self.labelFile = LabelFile(label_file)
+                #print('label_file:',label_file)
+                self.labelFile = LabelFile(label_file, imgs_dir=img_dir)
             except LabelFileError as e:
                 self.errorMessage(
                     self.tr("Error opening file"),
@@ -2026,42 +2029,37 @@ class MainWindow(QtWidgets.QMainWindow):
             | QtWidgets.QFileDialog.DontResolveSymlinks,
         )
         output_dir = str(output_dir)
-
         if not output_dir:
             return
 
         self.output_dir = output_dir
-
         self.statusBar().showMessage(
             self.tr("%s . Annotations will be saved/loaded in %s")
             % ("Change Annotations Dir", self.output_dir)
         )
         self.statusBar().show()
-
         current_filename = self.filename
         self.importDirImages(self.lastOpenDir, load=False)
-
         if current_filename in self.imageList:
             # retain currently selected file
             self.fileListWidget.setCurrentRow(
                 self.imageList.index(current_filename)
             )
             self.fileListWidget.repaint()
-
     def saveFile(self, _value=False):
         assert not self.image.isNull(), "cannot save empty image"
         # try:
         if self.labelFile:
-            print('!!!!!!!!!')
+            # print('!!!!!!!!!')
             # DL20180323 - overwrite when in directory
-            print('self.labelFile.filename：',self.labelFile.filename)
+            # print('self.labelFile.filename：',self.labelFile.filename)
             self._saveFile(self.labelFile.filename)
         elif self.output_file:
-            print('@@@@@@@@@@@')
+            # print('@@@@@@@@@@@')
             self._saveFile(self.output_file)
             self.close()
         else:
-            print('#########')
+            # print('#########')
             self._saveFile(self.saveFileDialog())
         # except:
         #     self.errorMessage(
@@ -2112,7 +2110,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return filename
 
     def _saveFile(self, filename):
-        print('进去_saveFile函数')
+        # print('进去_saveFile函数')
         #print('self.saveLabels(filename:',self.saveLabels(filename))
         if filename and self.saveLabels(filename):
             self.addRecentFile(filename)
