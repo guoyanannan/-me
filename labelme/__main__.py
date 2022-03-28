@@ -15,7 +15,6 @@ import imgviz
 import json
 import shutil
 import base64
-from threading import Thread
 from Crypto.Cipher import AES
 import numpy as np
 import xml.etree.ElementTree as ET
@@ -30,6 +29,7 @@ from labelme.app import MainWindow
 from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon
+
 
 
 # str不是16的倍数那就补足为16的倍数
@@ -295,6 +295,7 @@ def main():
                 return JsonPaths,ImgPaths,Ptyoe
 
         def GenClsData(self):
+
             JsonPaths,ImgPaths,PType = self.chackPath()
             if not JsonPaths or not ImgPaths:
                 return
@@ -408,6 +409,7 @@ def main():
                 QtWidgets.QApplication.processEvents()
                 # time.sleep(0.05)
 
+
         def GenSegData(self):
             JsonPaths, ImgPaths,PType = self.chackPath()
             if not JsonPaths or not ImgPaths:
@@ -473,11 +475,12 @@ def main():
                 mask_label = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8)  # w,h
                 shapeList = data['shapes']
                 flag = 0
+
                 # print('ImagePath：',ImagePath)
                 for shape in shapeList:
-                    mask = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8)  # w,h
-                    mask = Image.fromarray(mask)
                     if shape['shape_type'] == 'polygon':
+                        mask = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8)  # w,h
+                        mask = Image.fromarray(mask)
                         flag += 1
                         points = shape['points']
                         className = shape["label"]
@@ -490,6 +493,7 @@ def main():
                         ImageDraw.Draw(mask).polygon(xy=xy, outline=1, fill=1)
                         mask_bool = np.array(mask,dtype=bool)
                         mask_label[mask_bool]=classIndex
+
                 if flag != 0:
                     mask_label=img_as_ubyte(mask_label) #0-255
                     mask_label_rgb= imgviz.label2rgb(mask_label)
@@ -506,6 +510,8 @@ def main():
                     ImagePIL.save(new_img_path)
                     Image.fromarray(mask_label).save(mask_label_path)
                     Image.fromarray(mask_label_rgb).save(mask_label_path_rgb)
+
+
                 image_index += 1
                 self.pbar.setValue(image_index / total_num * 100)
                 QtWidgets.QApplication.processEvents()
@@ -558,7 +564,7 @@ def main():
                 img_save_path_2 = os.path.join(save_img_dir_back,img_name+f".{img_mat}")
                 lal_save_path_2 = os.path.join(save_Ann_dir_back,img_name+f".{label_mat}")
                 ImagePIL.save(img_save_path_2)
-                lbl_file = open(lal_save_path_2, 'wb+', encoding='utf8')
+                lbl_file = open(lal_save_path_2, 'w+', encoding='utf8')
                 lbl_file.close()
                 return
 
@@ -824,7 +830,7 @@ def main():
                     img_save_path_2 = os.path.join(save_img_dir_back, ImgName + f".{ImgMat}")
                     lal_save_path_2 = os.path.join(save_Ann_dir_back, ImgName + f".{label_mat}")
                     ImagePIL.save(img_save_path_2)
-                    lbl_file = open(lal_save_path_2,'wb+',encoding='utf8')
+                    lbl_file = open(lal_save_path_2,'w+',encoding='utf8')
                     lbl_file.close()
                     image_index += 1
                 else:
@@ -987,6 +993,7 @@ def main():
             self.pbar.setValue(0)  # 进度条初始值为0
             self.pbar.setGeometry(350, 300, 250, 30)
 
+
             #创建一个菜单
             self.MenuBtn =QtWidgets.QPushButton("选项",self)
             #创建一个菜单对象
@@ -1002,10 +1009,10 @@ def main():
             yl_action.triggered.connect(self.GenYOLODate)
             seg_action = QtWidgets.QAction('分割格式', self)  # 创建对象
             seg_action.triggered.connect(self.GenSegData)
-            seg_action = QtWidgets.QAction('切分模式', self)  # 创建对象
-            seg_action.triggered.connect(self.split_img_xml)
+            split_action = QtWidgets.QAction('切图模式', self)  # 创建对象
+            split_action.triggered.connect(self.split_img_xml)
 
-            self.Menu.addActions([ch_action,cls_action,det_action,yl_action,seg_action])  # 将图标添加到菜单中
+            self.Menu.addActions([ch_action,cls_action,det_action,yl_action,seg_action,split_action])  # 将图标添加到菜单中
             self.MenuBtn.setMenu(self.Menu)  # 将菜单添加到按键中
 
             self.btsec = QtWidgets.QPushButton("选择文件夹", self)
@@ -1067,4 +1074,5 @@ def main():
 
 # this main block is required to generate executable by pyinstaller
 if __name__ == "__main__":
+    from qtpy.QtCore import QMutex
     main()
