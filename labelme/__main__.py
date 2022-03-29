@@ -951,12 +951,7 @@ def main():
 
         def GetInfo(self):
             path_req = self.get_directory_path
-            # print(str(self.dateEdit1.dateTime().toPyDateTime()))
-            # print(help(self.dateEdit1.dateTime()))
-            try:
-                time_info = str(self.dateEdit1.dateTime().toPyDateTime())[:-7]
-            except:
-                time_info = str(self.dateEdit1.dateTime().toPython())[:-7]
+            time_info = str(self.label3.text())
             n_time11 = time.strptime(time_info, "%Y-%m-%d %H:%M:%S")
             n_time1 = int(time.strftime('%Y%m%d%H%M%S', n_time11))
             text_name = self.lin_2.text()
@@ -983,6 +978,10 @@ def main():
                 else:
                     QtWidgets.QMessageBox.warning(self, '错误', "请选择更改名称的图片所在目录！！", )
 
+        def showtime(self):
+            datetime = QtCore.QDateTime.currentDateTime()
+            text = datetime.toString('yyyy-MM-dd HH:mm:ss')
+            self.label3.setText(text)
         def initUI(self):
             #进度条
             self.Num = 0
@@ -1044,22 +1043,21 @@ def main():
             self.btno.move(self.btsec.x(), 310+self.btno.height())
             #
             self.label1 = QtWidgets.QLabel('标注时间:',self)
-            self.curr_time = QtCore.QDateTime.currentDateTime()
-            self.dateEdit1 = QtWidgets.QDateTimeEdit(self.curr_time, self)
+            self.label3 = QtWidgets.QLabel(self)
+            timer = QtCore.QTimer(self)
+            timer.timeout.connect(self.showtime)
+            timer.start()
+            self.label1.resize(200,30)
+            self.label1.move(self.width() // 3 - 0.3 * self.label1.width(), self.height() // 6)
+            self.label3.resize(200, 30)
 
-            self.dateEdit1.setDisplayFormat('yyyy-MM-dd HH:mm:ss')
-            self.dateEdit1.resize(200,30)
-            self.dateEdit1.move(self.width()//3,self.height()//6)
-            self.label1.resize(100, 30)
-            self.label1.move(self.dateEdit1.x()-0.7*self.label1.width(),self.dateEdit1.y())
-
-            #
             self.label2 = QtWidgets.QLabel('标注者:', self)
-            self.label2.move(self.label1.x(),self.dateEdit1.y()+self.dateEdit1.height()*2)
+            self.label2.move(self.label1.x(),self.label1.y()*1.6)
             self.lin_2 = QtWidgets.QLineEdit(self)
             self.lin_2.setPlaceholderText('请使用英文或者拼音！！')
             self.lin_2.resize(200,30)
             self.lin_2.move(self.label2.x()+0.7*self.label2.width(),self.label2.y())
+            self.label3.move(self.label2.x() + 0.7 * self.label2.width(), self.label1.y())
             self.setGeometry(300, 300, 600, 500)
             self.setWindowTitle('标注工具[测试版本v1.0.0]:BKVISION')
 
