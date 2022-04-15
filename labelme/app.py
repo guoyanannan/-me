@@ -1514,6 +1514,7 @@ class MainWindow(QtWidgets.QMainWindow):
             flags[key] = flag
         try:
             imagePath = osp.relpath(self.imagePath, osp.dirname(filename))
+            imagePath = os.path.split(imagePath)[-1]
             # imageData = self.imageData if self._config["store_data"] else None
             imageData = None if self._config["store_data"] else self.imageData
             if osp.dirname(filename) and not osp.exists(osp.dirname(filename)):
@@ -1745,7 +1746,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.status(self.tr("Loading %s...") % osp.basename(str(filename)))
         label_file = osp.splitext(filename)[0] + ".json"
         img_dir = filename.split('\\')[0]
-        ##print('img_dir:',img_dir)
+        # print('img_dir:',img_dir)
         if self.output_dir:
             label_file_without_path = osp.basename(label_file)
             label_file = osp.join(self.output_dir, label_file_without_path)
@@ -1753,7 +1754,7 @@ class MainWindow(QtWidgets.QMainWindow):
             label_file
         ):
             try:
-                #print('label_file:',label_file)
+                # print('label_file:',label_file)
                 self.labelFile = LabelFile(label_file, imgs_dir=img_dir)
             except LabelFileError as e:
                 self.errorMessage(

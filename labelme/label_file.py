@@ -2,6 +2,7 @@ import base64
 import contextlib
 import io
 import json
+import os.path
 import os.path as osp
 
 import PIL.Image
@@ -114,11 +115,12 @@ class LabelFile(object):
                     imageData = utils.img_data_to_png_data(imageData)
             else:
                 # relative path from label file to relative path from cwd
+                imgPath = os.path.split(data["imagePath"])[-1]
                 if imgs_dir is None:
-                    imagePath = osp.join(osp.dirname(filename), data["imagePath"])
+                    imagePath = osp.join(osp.dirname(filename), imgPath)
                 else:
-                    imagePath = osp.join(imgs_dir,data["imagePath"])
-                ##print('imagePath:', imagePath)
+                    imagePath = osp.join(imgs_dir,imgPath)
+                # print('imagePath:', imagePath)
                 imageData = self.load_image_file(imagePath)
             flags = data.get("flags") or {}
             imagePath = data["imagePath"]
@@ -190,6 +192,7 @@ class LabelFile(object):
         flags=None,
         definition=9,
     ):
+
         if imageData is not None:
             imageData = base64.b64encode(imageData).decode("utf-8")
             imageHeight, imageWidth = self._check_image_height_and_width(
