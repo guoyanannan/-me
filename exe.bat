@@ -1,3 +1,3 @@
-call activate metool
-pyinstaller -Fw run.spec
+call activate lm
+pyinstaller  run.spec
 pause
