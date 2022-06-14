@@ -547,6 +547,14 @@ def main():
             img = np.array(ImagePIL)
             img_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
             h_ori, w_ori = img.shape  # 保存原图的大小
+            if resolution.lower() == '4k'.lower():
+                if w_ori != 4096:
+                    QtWidgets.QMessageBox.warning(self, '错误', "请选择(4k)分辨率进行切分！！", )
+                    return 0
+            else:
+                if w_ori != 8192:
+                    QtWidgets.QMessageBox.warning(self, '错误', "请选择(8k)分辨率进行切分！！", )
+                    return 0
             # print(f'{img_path}:::{img.shape}')
             # img = cv2.resize(img, (2048, 2048))#可以resize也可以不resize，看情况而定
             h, w = img.shape
@@ -578,7 +586,7 @@ def main():
                 ImagePIL.save(img_save_path_2)
                 lbl_file = open(lal_save_path_2, 'w+', encoding='utf8')
                 lbl_file.close()
-                return
+                return 1
 
             i = 0
             w_win_size = 1024
@@ -660,6 +668,8 @@ def main():
                     else:
                         print(f'{img_name}.{img_mat}切分至第{i}份框坐标x1,x2重合成线，忽略当前第{i}份图像！！！！！')
 
+            return 1
+
         def SplitAndTransform(self,mold='VOC',cam_res='4k'):
             JsonPaths, ImgPaths, PType = self.chackPath()
             if not JsonPaths or not ImgPaths:
@@ -723,6 +733,7 @@ def main():
             with open(os.path.join(Save_dir, 'classnames.json'), 'w', encoding='utf8') as f:
                 json.dump(info, f, indent=4, separators=(',', ': '))
             total_num = len(os.listdir(JsonPaths))
+            Num = 0
             for JsonPath in glob.glob(JsonPaths + "/*.json"):
                 bk = 0
                 ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
@@ -745,17 +756,18 @@ def main():
                     ImgName = ImagePath.split('/')[-1].split('.')[0]
                     ImgMat = ImagePath.split('/')[-1].split('.')[1]
 
-                self.clip_img(
-                     ImagePath, ImgName, ImgMat,
-                     JsonPath, label_mat,
-                     EngCls, mold,
-                     save_img_dir, save_Ann_dir,
-                     save_img_dir_back,save_Ann_dir_back,
-                     resolution=cam_res.lower(),
-                     )
-
-                self.Num += 1
-                self.pbar.setValue(self.Num / total_num * 100)
+                result = self.clip_img(
+                         ImagePath, ImgName, ImgMat,
+                         JsonPath, label_mat,
+                         EngCls, mold,
+                         save_img_dir, save_Ann_dir,
+                         save_img_dir_back,save_Ann_dir_back,
+                         resolution=cam_res.lower(),
+                         )
+                if not result:
+                    return 
+                Num += 1
+                self.pbar.setValue(Num / total_num * 100)
                 QtWidgets.QApplication.processEvents()
 
         def split_img_xml(self):
