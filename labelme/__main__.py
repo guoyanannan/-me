@@ -659,12 +659,23 @@ def main():
 
                     if xiefou:
                         if youwu:
-                            if mode=='VOC':
+                            if mode == 'VOC':
                                 img_new_name = img_name + '_%05d.%s' % (i,img_mat)
                                 lal_new_name = img_name + '_%05d.%s' % (i,label_mat)
                                 img_save_path_1 = os.path.join(imgs_save_dir,img_new_name)
                                 lal_save_path_1 = os.path.join(labels_save_dir, lal_new_name)
                                 self.write_xml(tmp_PIL, temp_boxes, img_new_name, lal_save_path_1, img_save_path_1)
+                            elif mode == 'YOLO':
+                                img_new_name = img_name + '_%05d.%s' % (i, img_mat)
+                                lal_new_name = img_name + '_%05d.%s' % (i, label_mat)
+                                img_save_path_1 = os.path.join(imgs_save_dir, img_new_name)
+                                lal_save_path_1 = os.path.join(labels_save_dir, lal_new_name)
+                                class_txt_path = os.path.join(labels_save_dir,'..','classes.txt')
+                                if not os.path.exists(class_txt_path):
+                                    with open(class_txt_path, 'w', encoding='utf-8') as clsop:
+                                        for class_name in EngCls:
+                                            clsop.write(str(class_name)+ '\n')
+                                self.write_txt(tmp_PIL, temp_boxes, lal_save_path_1, img_save_path_1, EngCls)
                     else:
                         print(f'{img_name}.{img_mat}切分至第{i}份框坐标x1,x2重合成线，忽略当前第{i}份图像！！！！！')
 
@@ -675,14 +686,14 @@ def main():
             if not JsonPaths or not ImgPaths:
                 return
             mold = mold
-            if mold == "VOC":
+            if mold.upper() == "VOC".upper():
                 Save_dir = JsonPaths.replace('labels', 'SplitVOCMoldData')
                 save_img_dir = os.path.join(Save_dir, "JPEGImages")
                 save_Ann_dir = os.path.join(Save_dir, "Annotations")
                 save_img_dir_back = os.path.join(Save_dir, "JPEGImagesBackground")
                 save_Ann_dir_back = os.path.join(Save_dir, "AnnotationsBackground")
                 label_mat = 'xml'
-            elif mold == "YOLO":
+            elif mold.upper() == "YOLO".upper():
                 Save_dir = JsonPaths.replace('labels', 'SplitYOLOMoldData')
                 save_img_dir = os.path.join(Save_dir, "Images")
                 save_Ann_dir = os.path.join(Save_dir, "Labels")
@@ -765,7 +776,7 @@ def main():
                          resolution=cam_res.lower(),
                          )
                 if not result:
-                    return 
+                    return
                 Num += 1
                 self.pbar.setValue(Num / total_num * 100)
                 QtWidgets.QApplication.processEvents()
@@ -775,6 +786,12 @@ def main():
 
         def split_img_xml_8(self):
             self.SplitAndTransform(mold='VOC', cam_res='8k')
+
+        def split_img_yolo(self):
+            self.SplitAndTransform(mold='YOLO')
+
+        def split_img_yolo_8(self):
+            self.SplitAndTransform(mold='YOLO', cam_res='8k')
 
         def GetBBox(self,mold='VOC'):
             JsonPaths, ImgPaths, PType = self.chackPath()
@@ -1073,12 +1090,18 @@ def main():
             yl_action.triggered.connect(self.GenYOLODate)
             seg_action = QtWidgets.QAction('分割格式', self)  # 创建对象
             seg_action.triggered.connect(self.GenSegData)
-            split_action = QtWidgets.QAction('切图模式(4k)', self)  # 创建对象
+            # voc格式
+            split_action = QtWidgets.QAction('切图VOC格式(4k)', self)  # 创建对象
             split_action.triggered.connect(self.split_img_xml)
-            split_action_8 = QtWidgets.QAction('切图模式(8k)', self)  # 创建对象
+            split_action_8 = QtWidgets.QAction('切图VOC格式(8k)', self)  # 创建对象
             split_action_8.triggered.connect(self.split_img_xml_8)
+            # yolo格式
+            yolo_split_action = QtWidgets.QAction('切图YOLO格式(4k)', self)  # 创建对象
+            yolo_split_action.triggered.connect(self.split_img_yolo)
+            yolo_split_action_8 = QtWidgets.QAction('切图YOLO格式(8k)', self)  # 创建对象
+            yolo_split_action_8.triggered.connect(self.split_img_yolo_8)
 
-            self.Menu.addActions([ch_action,cls_action,det_action,yl_action,seg_action,split_action,split_action_8])  # 将图标添加到菜单中
+            self.Menu.addActions([ch_action,cls_action,det_action,yl_action,seg_action,split_action,split_action_8,yolo_split_action,yolo_split_action_8])  # 将图标添加到菜单中
             self.MenuBtn.setMenu(self.Menu)  # 将菜单添加到按键中
 
             self.btsec = QtWidgets.QPushButton("选择文件夹", self)
@@ -1125,7 +1148,7 @@ def main():
             self.lin_2.resize(200,30)
             self.lin_2.move(self.label2.x()+0.7*self.label2.width(),self.label2.y())
             self.label3.move(self.label2.x() + 0.7 * self.label2.width(), self.label1.y())
-            self.setGeometry(300, 300, 600, 500)
+            self.setGeometry(300, 300, 600, 535)
             self.setWindowTitle('标注工具[测试版本v1.0.0]:BKVISION')
 
             #固定窗口大小
