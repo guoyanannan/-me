@@ -373,9 +373,9 @@ def main():
                             os.makedirs(Subfolder)
                         x1, y1, x2, y2 = (points[0][0],points[0][1],points[1][0],points[1][1])
                         x1_temp = min(x1,x2)-100
-                        y1_temp = min(y1,y1)-100
+                        y1_temp = min(y1,y2)-100
                         x2_temp = max(x1,x2)+100
-                        y2_temp = max(y1,y1)+100
+                        y2_temp = max(y1,y2)+100
                         if x1_temp <= 0:
                             x1_temp = 0
                         if x2_temp >= ImgW:
