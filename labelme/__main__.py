@@ -264,9 +264,14 @@ def main():
                         shutil.rmtree(name)
                         os.makedirs(name)
                         break
-                    except:
-                        time.sleep(0.5)
-                        continue
+                    except Exception as E:
+                        print('Error:',str(E))
+                        if '[WinError 5]' in str(E):
+                            print(E)
+                            break
+                        else:
+                            time.sleep(0.01)
+                            continue
             else:
                 os.makedirs(name)
 
@@ -276,9 +281,14 @@ def main():
                     try:
                         shutil.rmtree(name)
                         break
-                    except:
-                        time.sleep(0.5)
-                        continue
+                    except Exception as E:
+                        print('Error:', str(E))
+                        if '[WinError 5]' in str(E):
+                            print(E)
+                            break
+                        else:
+                            time.sleep(0.01)
+                            continue
 
         def mk_dir(self,name):
             if not os.path.exists(name):
@@ -286,9 +296,14 @@ def main():
                     try:
                         os.makedirs(name)
                         break
-                    except:
-                        time.sleep(0.5)
-                        continue
+                    except Exception as E:
+                        print('Error:', str(E))
+                        if '[WinError 5]' in str(E):
+                            print(E)
+                            break
+                        else:
+                            time.sleep(0.01)
+                            continue
 
         def chackPath(self):
             DataPath = self.get_directory_path
@@ -428,6 +443,7 @@ def main():
             save_img_dir = os.path.join(Save_dir,"SegImages")
             save_msk_dir = os.path.join(Save_dir,"SegLabels")
             save_msk_dir_rgb = os.path.join(Save_dir,"RGBSegLabels")
+            self.check_file(Save_dir)
             self.check_file(save_img_dir)
             self.check_file(save_msk_dir)
             self.check_file(save_msk_dir_rgb)
@@ -675,6 +691,11 @@ def main():
                                     with open(class_txt_path, 'w', encoding='utf-8') as clsop:
                                         for class_name in EngCls:
                                             clsop.write(str(class_name)+ '\n')
+                                data_path = os.path.join(labels_save_dir,'..','data')
+                                if not os.path.exists(os.path.join(data_path,'predefined_classes.txt')):
+                                    self.mk_dir(data_path)
+                                    shutil.copy(class_txt_path,os.path.join(data_path,'predefined_classes.txt'))
+
                                 self.write_txt(tmp_PIL, temp_boxes, lal_save_path_1, img_save_path_1, EngCls)
                     else:
                         print(f'{img_name}.{img_mat}切分至第{i}份框坐标x1,x2重合成线，忽略当前第{i}份图像！！！！！')
@@ -687,24 +708,41 @@ def main():
                 return
             mold = mold
             if mold.upper() == "VOC".upper():
-                Save_dir = JsonPaths.replace('labels', 'SplitVOCMoldData')
-                save_img_dir = os.path.join(Save_dir, "JPEGImages")
-                save_Ann_dir = os.path.join(Save_dir, "Annotations")
-                save_img_dir_back = os.path.join(Save_dir, "JPEGImagesBackground")
-                save_Ann_dir_back = os.path.join(Save_dir, "AnnotationsBackground")
-                label_mat = 'xml'
+                if cam_res.lower() == '4k'.lower():
+                    Save_dir = JsonPaths.replace('labels', 'SplitVOCMoldData_4K')
+                    save_img_dir = os.path.join(Save_dir, "JPEGImages")
+                    save_Ann_dir = os.path.join(Save_dir, "Annotations")
+                    save_img_dir_back = os.path.join(Save_dir, "JPEGImagesBackground")
+                    save_Ann_dir_back = os.path.join(Save_dir, "AnnotationsBackground")
+                    label_mat = 'xml'
+                elif cam_res.lower() == '8k'.lower():
+                    Save_dir = JsonPaths.replace('labels', 'SplitVOCMoldData_8K')
+                    save_img_dir = os.path.join(Save_dir, "JPEGImages")
+                    save_Ann_dir = os.path.join(Save_dir, "Annotations")
+                    save_img_dir_back = os.path.join(Save_dir, "JPEGImagesBackground")
+                    save_Ann_dir_back = os.path.join(Save_dir, "AnnotationsBackground")
+                    label_mat = 'xml'
             elif mold.upper() == "YOLO".upper():
-                Save_dir = JsonPaths.replace('labels', 'SplitYOLOMoldData')
-                save_img_dir = os.path.join(Save_dir, "Images")
-                save_Ann_dir = os.path.join(Save_dir, "Labels")
-                save_img_dir_back = os.path.join(Save_dir, "ImagesBackground")
-                save_Ann_dir_back = os.path.join(Save_dir, "LabelsBackground")
-                label_mat = 'txt'
+                if cam_res.lower() == '4k'.lower():
+                    Save_dir = JsonPaths.replace('labels', 'SplitYOLOMoldData_4K')
+                    save_img_dir = os.path.join(Save_dir, "Images")
+                    save_Ann_dir = os.path.join(Save_dir, "Labels")
+                    save_img_dir_back = os.path.join(Save_dir, "ImagesBackground")
+                    save_Ann_dir_back = os.path.join(Save_dir, "LabelsBackground")
+                    label_mat = 'txt'
+                elif cam_res.lower() == '8k'.lower():
+                    Save_dir = JsonPaths.replace('labels', 'SplitYOLOMoldData_8K')
+                    save_img_dir = os.path.join(Save_dir, "Images")
+                    save_Ann_dir = os.path.join(Save_dir, "Labels")
+                    save_img_dir_back = os.path.join(Save_dir, "ImagesBackground")
+                    save_Ann_dir_back = os.path.join(Save_dir, "LabelsBackground")
+                    label_mat = 'txt'
 
+            self.check_file(Save_dir)
             self.check_file(save_img_dir)
             self.check_file(save_Ann_dir)
-            self.del_dir(save_img_dir_back)
-            self.del_dir(save_Ann_dir_back)
+            # self.del_dir(save_img_dir_back)
+            # self.del_dir(save_Ann_dir_back)
 
             # 另存无标注的数据
             for img_name in os.listdir(ImgPaths):
@@ -813,10 +851,11 @@ def main():
                 save_Ann_dir_back = os.path.join(Save_dir, "LabelsBackground")
                 label_mat = 'txt'
 
+            self.check_file(Save_dir)
             self.check_file(save_img_dir)
             self.check_file(save_Ann_dir)
-            self.del_dir(save_img_dir_back)
-            self.del_dir(save_Ann_dir_back)
+            # self.del_dir(save_img_dir_back)
+            # self.del_dir(save_Ann_dir_back)
 
             # 另存无标注的数据
             for img_name in os.listdir(ImgPaths):
