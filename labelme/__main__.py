@@ -319,8 +319,21 @@ def main():
                 Ptyoe = DataPath.split('/')[-2]
                 return JsonPaths,ImgPaths,Ptyoe
 
-        def GenClsData(self):
+        def parse_points(self,points,img_h,img_w):
+            temp_points = []
+            for x, y in points:
+                if x < 0:
+                    x = 1
+                elif x > img_w:
+                    x = img_w-1
+                if y < 0:
+                    y = 1
+                elif y > img_h:
+                    y = img_h-1
+                temp_points.append([x, y])
+            return temp_points
 
+        def GenClsData(self):
             JsonPaths,ImgPaths,PType = self.chackPath()
             if not JsonPaths or not ImgPaths:
                 return
@@ -373,7 +386,7 @@ def main():
                 #print(shapeList)
                 Roi_index = 1
                 for shape in shapeList:
-                    points = shape['points']
+                    points = self.parse_points(shape['points'],ImgH,ImgW) #shape['points']
                     className = shape["chineselabel"]
                     eng_name = shape["label"]
                     if str(eng_name) not in EngCls:
@@ -394,11 +407,11 @@ def main():
                         if x1_temp <= 0:
                             x1_temp = 0
                         if x2_temp >= ImgW:
-                            x2_temp = ImgW
+                            x2_temp = ImgW-1
                         if y1_temp <= 0:
                             y1_temp = 0
                         if y2_temp >=ImgH:
-                            y2_temp = ImgH
+                            y2_temp = ImgH-1
                         x1,y1,x2,y2 = x1_temp,y1_temp,x2_temp,y2_temp
                         Roi_pil = ImgSrc.crop((x1,y1,x2,y2))
                         Roi_pil.save(Roi_path)
@@ -412,11 +425,11 @@ def main():
                         if x1 <= 0:
                             x1 = 0
                         if x2 >= ImgW:
-                            x2 = ImgW
+                            x2 = ImgW-1
                         if y1 <= 0:
                             y1 = 0
                         if y2 >=ImgH:
-                            y2 = ImgH
+                            y2 = ImgH-1
                         Roi_pil = ImgSrc.crop((x1,y1,x2,y2))
                         Roi_pil.save(Roi_path)
                         Roi_index += 1
@@ -476,6 +489,9 @@ def main():
 
             total_num = len(os.listdir(JsonPaths))
             image_index = 0
+
+            def abs_point(x):
+                return tuple([abs(i) for i in x])
             for JsonPath in glob.glob(JsonPaths + "/*.json"):
                 bk = 0
                 ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
@@ -498,6 +514,7 @@ def main():
                     ImgName = ImagePath.split('/')[-1].split('.')[0]
                     ImgMat = ImagePath.split('/')[-1].split('.')[1]
                 ImagePIL = Image.open(ImagePath).convert('L') #w,h
+                imgW,imgH = ImagePIL.size
                 data = json.load(open(JsonPath, 'r', encoding='utf8'))
                 mask_label = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8)  # w,h
                 shapeList = data['shapes']
@@ -509,14 +526,14 @@ def main():
                         mask = np.zeros(ImagePIL.size[::-1][:2], dtype=np.uint8)  # w,h
                         mask = Image.fromarray(mask)
                         flag += 1
-                        points = shape['points']
+                        points = self.parse_points(shape['points'],imgH,imgW)
                         className = shape["label"]
                         if str(className) not in EngCls:
                             QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
                             continue
                         classIndex = EngCls.index(className)
                         # print('classIndex:',classIndex,'className:',className)
-                        xy = list(map(tuple, points))
+                        xy = list(map(abs_point, points))
                         ImageDraw.Draw(mask).polygon(xy=xy, outline=1, fill=1)
                         mask_bool = np.array(mask,dtype=bool)
                         mask_label[mask_bool]=classIndex
@@ -580,13 +597,13 @@ def main():
             res = np.empty((0, 5))  # 存放坐标的四个值和类别
             for shape in shapeList:
                 if shape['shape_type'] == 'rectangle':
-                    points = shape['points']
-                    x1, y1, x2, y2 = points[0][0], points[0][1], points[1][0], points[1][1]
+                    points = self.parse_points(shape['points'],h,w)
+                    x1, y1, x2, y2 = abs(points[0][0]), abs(points[0][1]), abs(points[1][0]), abs(points[1][1])
                     x1_tmp = min(x1, x2)*(w/w_ori)
                     y1_tmp = min(y1, y2)*(h/h_ori)
                     x2_tmp = max(x1, x2)*(w/w_ori)
                     y2_tmp = max(y1, y2)*(h/h_ori)
-                    x1, y1, x2, y2 = x1_tmp-1, y1_tmp-1, x2_tmp-1, y2_tmp-1
+                    x1, y1, x2, y2 = x1_tmp, y1_tmp, x2_tmp, y2_tmp
                     className = shape["label"]
                     if str(className) not in EngCls:
                         continue
@@ -924,14 +941,15 @@ def main():
                 lal_save_path_1 = os.path.join(save_Ann_dir,ImgName+f".{label_mat}")
 
                 ImagePIL = Image.open(ImagePath).convert('L')  # w,h
+                imgW,imgH = ImagePIL.size
                 img_name = ImgName+f".{ImgMat}"
                 data = json.load(open(JsonPath, 'r', encoding='utf8'))
                 shapeList = data['shapes']
                 box_info = []
                 for shape in shapeList:
                     if shape['shape_type'] == 'rectangle':
-                        points = shape['points']
-                        x1,y1,x2,y2 = points[0][0],points[0][1],points[1][0],points[1][1]
+                        points = self.parse_points(shape['points'],imgH,imgW)
+                        x1,y1,x2,y2 = abs(points[0][0]),abs(points[0][1]),abs(points[1][0]),abs(points[1][1])
                         x1_tmp = min(x1,x2)
                         y1_tmp = min(y1,y2)
                         x2_tmp = max(x1,x2)

@@ -1176,6 +1176,7 @@ class MainWindow(QtWidgets.QMainWindow):
         return False
 
     def editLabel(self, item=None):
+        # print('进入editLabel函数')
         if item and not isinstance(item, LabelListWidgetItem):
             raise TypeError("item must be LabelListWidgetItem type")
         if not self.canvas.editing():
@@ -1460,6 +1461,18 @@ class MainWindow(QtWidgets.QMainWindow):
     def saveLabels(self, filename):
         #print('进入saveLabels')
         lf = LabelFile()
+        def parse_points(point):
+            x,y = point
+            if x <0:
+                x=1
+            elif x > self.image.width():
+                x = self.image.width()-1
+            if y <0:
+                y=1
+            elif y> self.image.height():
+                y = self.image.height()-1
+            return x,y
+
         def format_shape(s):
             data = s.other_data.copy()
             try:
@@ -1469,7 +1482,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         chineselabel=s.label.encode("utf-8") if PY2 else s.label_ch,
                         confidence=s.label.encode("utf-8") if PY2 else s.label_dif,
                         definition=s.label.encode("utf-8") if PY2 else s.label_objdif,
-                        points=[(p.x(), p.y()) for p in s.points],
+                        # points=[(p.x(), p.y()) for p in s.points],
+                        points=list(map(parse_points,[(p.x(), p.y()) for p in s.points])),
                         group_id=s.group_id,
                         shape_type=s.shape_type,
                         flags=s.flags,
@@ -1482,7 +1496,8 @@ class MainWindow(QtWidgets.QMainWindow):
                         chineselabel=s.label.encode("utf-8") if PY2 else s.chineselabel,
                         confidence=s.label.encode("utf-8") if PY2 else s.confidence,
                         definition=s.label.encode("utf-8") if PY2 else s.obj_definition,
-                        points=[(p.x(), p.y()) for p in s.points],
+                        # points=[(p.x(), p.y()) for p in s.points],
+                        points=list(map(parse_points,[(p.x(), p.y()) for p in s.points])),
                         group_id=s.group_id,
                         shape_type=s.shape_type,
                         flags=s.flags,
@@ -1494,6 +1509,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # print('shapes：',shapes)
         # print('item.shape()：')
         # print([item.shape() for item in self.labelList])
+
         img_defi = ''
         try:
             img_defi = [item.shape().label_imgdif for item in self.labelList][-1]
@@ -1569,6 +1585,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.canvas.deSelectShape()
 
     def labelItemChanged(self, item):
+        # print('进入labelItemChanged函数')
         shape = item.shape()
         self.canvas.setShapeVisible(shape, item.checkState() == Qt.Checked)
 
