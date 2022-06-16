@@ -959,6 +959,15 @@ def main():
                     if mold == 'VOC':
                         self.write_xml(ImagePIL,box_info,img_name,lal_save_path_1,img_save_path_1)
                     elif mold == 'YOLO':
+                        class_txt_path = os.path.join(save_Ann_dir, '..', 'classes.txt')
+                        if not os.path.exists(class_txt_path):
+                            with open(class_txt_path, 'w', encoding='utf-8') as clsop:
+                                for class_name in EngCls:
+                                    clsop.write(str(class_name) + '\n')
+                        data_path = os.path.join(save_Ann_dir, '..', 'data')
+                        if not os.path.exists(os.path.join(data_path, 'predefined_classes.txt')):
+                            self.mk_dir(data_path)
+                            shutil.copy(class_txt_path, os.path.join(data_path, 'predefined_classes.txt'))
                         self.write_txt(ImagePIL,box_info,lal_save_path_1,img_save_path_1,EngCls)
                     image_index += 1
                 self.pbar.setValue(image_index / total_num * 100)
