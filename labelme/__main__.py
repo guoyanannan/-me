@@ -363,7 +363,7 @@ def main():
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json','jpg').replace('labels','images')
                 if not os.path.exists(ImagePath):
-                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
                     QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
                     bk += 1
                 if bk >= 1:
@@ -373,11 +373,11 @@ def main():
                     continue
 
                 if platform.system() =="Windows":
-                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
-                    ImgMat = ImagePath.split('\\')[-1].split('.')[1]
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
                 elif platform.system() =="Linux":
-                    ImgName = ImagePath.split('/')[-1].split('.')[0]
-                    ImgMat = ImagePath.split('/')[-1].split('.')[1]
+                    ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
 
                 ImgSrc = Image.open(ImagePath).convert('L')
                 ImgW, ImgH = ImgSrc.size
@@ -498,7 +498,7 @@ def main():
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
-                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
                     QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
                     bk += 1
                 if bk >= 1:
@@ -508,11 +508,11 @@ def main():
                     continue
                 MskMat = 'png'
                 if platform.system() == "Windows":
-                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
-                    ImgMat = ImagePath.split('\\')[-1].split('.')[1]
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
                 elif platform.system() == "Linux":
-                    ImgName = ImagePath.split('/')[-1].split('.')[0]
-                    ImgMat = ImagePath.split('/')[-1].split('.')[1]
+                    ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
                 ImagePIL = Image.open(ImagePath).convert('L') #w,h
                 imgW,imgH = ImagePIL.size
                 data = json.load(open(JsonPath, 'r', encoding='utf8'))
@@ -554,7 +554,6 @@ def main():
                     ImagePIL.save(new_img_path)
                     Image.fromarray(mask_label).save(mask_label_path)
                     Image.fromarray(mask_label_rgb).save(mask_label_path_rgb)
-
 
                 image_index += 1
                 self.pbar.setValue(image_index / total_num * 100)
@@ -762,8 +761,10 @@ def main():
             # self.del_dir(save_Ann_dir_back)
 
             # 另存无标注的数据
+            num_no = len(os.listdir(ImgPaths))
+            no_index = 0
             for img_name in os.listdir(ImgPaths):
-                img_mat = img_name.split('.')[-1]
+                img_mat = img_name.rsplit('.', maxsplit=1)[-1]
                 label_name = img_name.replace(img_mat, 'json')
                 label_save_name = img_name.replace(img_mat, label_mat)
                 if img_mat.lower() in ('bmp', 'png', 'jpg', 'jpeg'):
@@ -777,6 +778,9 @@ def main():
                             pass
                         img_save_path = os.path.join(save_img_dir_back, img_name)
                         shutil.copy(img_path, img_save_path)
+                no_index += 1
+                self.pbar_no.setValue(no_index / num_no * 100)
+                QtWidgets.QApplication.processEvents()
 
 
             if "板" in PType:
@@ -807,20 +811,20 @@ def main():
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
-                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
                     QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
                     bk += 1
                 if bk == 1:
-                    self.Num += 1
-                    self.pbar.setValue(self.Num / total_num * 100)
+                    Num += 1
+                    self.pbar.setValue(Num / total_num * 100)
                     QtWidgets.QApplication.processEvents()
                     continue
                 if platform.system() == "Windows":
-                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
-                    ImgMat = ImagePath.split('\\')[-1].split('.')[1]
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
                 elif platform.system() == "Linux":
-                    ImgName = ImagePath.split('/')[-1].split('.')[0]
-                    ImgMat = ImagePath.split('/')[-1].split('.')[1]
+                    ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
 
                 result = self.clip_img(
                          ImagePath, ImgName, ImgMat,
@@ -875,8 +879,10 @@ def main():
             # self.del_dir(save_Ann_dir_back)
 
             # 另存无标注的数据
+            num_no=len(os.listdir(ImgPaths))
+            no_index=0
             for img_name in os.listdir(ImgPaths):
-                img_mat = img_name.split('.')[-1]
+                img_mat = img_name.rsplit('.', maxsplit=1)[-1]
                 label_name = img_name.replace(img_mat,'json')
                 label_save_name = img_name.replace(img_mat,label_mat)
                 if img_mat.lower() in ('bmp','png','jpg','jpeg'):
@@ -885,11 +891,15 @@ def main():
                     if not os.path.exists(label_path):
                         self.mk_dir(save_img_dir_back)
                         self.mk_dir(save_Ann_dir_back)
+                        print(f'{img_name}不存在标注数据..........')
                         label_save_path = os.path.join(save_Ann_dir_back,label_save_name)
                         with open(label_save_path,'w+',encoding='utf8') as f:
                             pass
                         img_save_path = os.path.join(save_img_dir_back,img_name)
                         shutil.copy(img_path,img_save_path)
+                no_index += 1
+                self.pbar_no.setValue(no_index / num_no * 100)
+                QtWidgets.QApplication.processEvents()
 
 
             if "板" in PType:
@@ -921,7 +931,7 @@ def main():
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
-                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
+                    ImgName = ImagePath.rsplit('\\')[-1].split('.', maxsplit=1)[0]
                     QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
                     bk += 1
                 if bk == 1:
@@ -930,11 +940,11 @@ def main():
                     QtWidgets.QApplication.processEvents()
                     continue
                 if platform.system() == "Windows":
-                    ImgName = ImagePath.split('\\')[-1].split('.')[0]
-                    ImgMat = ImagePath.split('\\')[-1].split('.')[1]
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
                 elif platform.system() == "Linux":
-                    ImgName = ImagePath.split('/')[-1].split('.')[0]
-                    ImgMat = ImagePath.split('/')[-1].split('.')[1]
+                    ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
 
                 #映射新路径
                 img_save_path_1 = os.path.join(save_img_dir,ImgName+f".{ImgMat}")
@@ -1005,7 +1015,7 @@ def main():
                 w = w * dw
                 y = y * dh
                 h = h * dh
-                return (x, y, w, h)
+                return x, y, w, h
 
             label_file = open(txt_path, 'w', encoding='utf-8')
             sizee=img.size
@@ -1085,9 +1095,9 @@ def main():
             num = 0
             total_num = len(os.listdir(dirPath))
             for FileName in os.listdir(dirPath):
-                if FileName.split(".")[-1] ==Mat:
+                if FileName.rsplit(".", maxsplit=1)[-1] ==Mat:
                     CountCr = "%06d"%CountNow
-                    FileNameNew = FileName.replace(FileName.split(".")[0],str(Tname)+"_"+str(Ttime)+"_"+CountCr)
+                    FileNameNew = FileName.replace(FileName.rsplit(".", maxsplit=1)[0],str(Tname)+"_"+str(Ttime)+"_"+CountCr)
                     FilePathNew = os.path.join(dirPath,FileNameNew)
                     filePathOld = os.path.join(dirPath,FileName)
                     os.rename(filePathOld,FilePathNew)
@@ -1140,6 +1150,11 @@ def main():
             self.pbar.setValue(0)  # 进度条初始值为0
             self.pbar.setGeometry(350, 300, 250, 30)
 
+            self.pbar_no = QtWidgets.QProgressBar(self)
+            self.pbar_no.setMinimum(0)  # 设置进度条最小值
+            self.pbar_no.setMaximum(100)  # 设置进度条最大值
+            self.pbar_no.setValue(0)  # 进度条初始值为0
+            self.pbar_no.setGeometry(350, 340, 250, 30)
 
             #创建一个菜单
             self.MenuBtn =QtWidgets.QPushButton("选项",self)
@@ -1185,10 +1200,14 @@ def main():
 
             self.btno = QtWidgets.QPushButton("跳转", self)
             self.btno.clicked.connect(self.switchWin)
-
-
             self.btsec.move(100,300)
             self.MenuBtn.move(250,300)
+
+            # 提取无标签数据
+            self.label_no_label = QtWidgets.QLabel( self)
+            self.label_no_label.setText('提取无标签数据:',)
+            self.label_no_label.resize(100, 50)
+            self.label_no_label.move(256,330)
             '''
             self.btok.move(250, 200)
             self.btcls.move(250,1.5*self.btcls.height()+self.btok.y())
