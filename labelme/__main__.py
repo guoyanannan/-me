@@ -2,6 +2,7 @@ import argparse
 import codecs
 import json
 import logging
+import math
 import os
 import os.path as osp
 import sys
@@ -17,6 +18,7 @@ import shutil
 import base64
 from Crypto.Cipher import AES
 import numpy as np
+from threading import Thread,Lock
 import xml.etree.ElementTree as ET
 from xml.dom.minidom import Document
 from PIL import Image,ImageDraw
@@ -237,6 +239,7 @@ def main():
             super().__init__()
             self.win = win
             self.class_info_dict = class_names
+            self.mutex = Lock()
             self.get_directory_path = None
             self.initUI()
 
@@ -363,8 +366,10 @@ def main():
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json','jpg').replace('labels','images')
                 if not os.path.exists(ImagePath):
+                    ImagePath = JsonPath.replace('json','png').replace('labels','images')
+                if not os.path.exists(ImagePath):
                     ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
-                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
+                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg、png! 点击OK键继续！", )
                     bk += 1
                 if bk >= 1:
                     image_index += 1
@@ -392,8 +397,8 @@ def main():
                     if str(eng_name) not in EngCls:
                         QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
                         continue
-                    print(Save_dir,className,eng_name,str(eng_name) not in EngCls)
-                    print(ImagePath)
+                    print(ImagePath,Save_dir,className,eng_name,str(eng_name) not in EngCls)
+
                     Subfolder = os.path.join(Save_dir, className)
                     Roi_path = os.path.join(Subfolder, ImgName + "_" + str(Roi_index) + f".{ImgMat}")
                     if shape['shape_type'] == 'rectangle':
@@ -498,8 +503,10 @@ def main():
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
+                    ImagePath = JsonPath.replace('json', 'png').replace('labels', 'images')
+                if not os.path.exists(ImagePath):
                     ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
-                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
+                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg、png! 点击OK键继续！", )
                     bk += 1
                 if bk >= 1:
                     image_index += 1
@@ -569,26 +576,32 @@ def main():
         def clip_img(self,
                      img_path, img_name, img_mat,
                      label_path,label_mat ,
-                     EngCls, mode,
+                     EngCls, mode,info_q,
                      imgs_save_dir, labels_save_dir,
                      save_img_dir_back,save_Ann_dir_back,
                      resolution,
                      debug=False):
 
             ImagePIL = Image.open(img_path).convert('L')  # w,h
-            img = np.array(ImagePIL)
-            img_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-            h_ori, w_ori = img.shape  # 保存原图的大小
+            img_name_warn = os.path.basename(img_path)
+            w_ori, h_ori= ImagePIL.size  # 保存原图的大小
             if resolution.lower() == '4k'.lower():
                 if w_ori != 4096:
-                    QtWidgets.QMessageBox.warning(self, '错误', "请选择(4k)分辨率进行切分！！", )
-                    return 0
+                    info = {'name':img_name_warn,'model':4}
+                    info_q.put(info)
+                    #QtWidgets.QMessageBox.warning(self, '警告', f"过滤当前非4k图像 {img_name_warn},点击 ok  继续！《请选择仅包含(4k)图像所在的样本库进行切分》", )
+                    return 2
             else:
                 if w_ori != 8192:
-                    QtWidgets.QMessageBox.warning(self, '错误', "请选择(8k)分辨率进行切分！！", )
-                    return 0
+                    info = {'name': img_name_warn, 'model': 8}
+                    info_q.put(info)
+                    # QtWidgets.QMessageBox.warning(self, '警告', f"过滤当前非8k图像 {img_name_warn},点击 ok  继续！《请选择仅包含(8k)图像所在的样本库进行切分》", )
+                    return 2
+            img = np.array(ImagePIL)
             # print(f'{img_path}:::{img.shape}')
             # img = cv2.resize(img, (2048, 2048))#可以resize也可以不resize，看情况而定
+            if debug:
+                img_rgb = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
             h, w = img.shape
             # 读取每个原图像的json文件
             data = json.load(open(label_path, 'r', encoding='utf8'))
@@ -605,14 +618,20 @@ def main():
                     x1, y1, x2, y2 = x1_tmp, y1_tmp, x2_tmp, y2_tmp
                     className = shape["label"]
                     if str(className) not in EngCls:
+                        info = {'name': className, 'model': -1}
+                        info_q.put(info)
                         continue
                     res = np.vstack((res, [int(x1), int(y1), int(x2), int(y2), className]))
 
             if res.shape[0] == 0:
                 if not os.path.exists(save_img_dir_back):
+                    self.mutex.acquire()
                     os.makedirs(save_img_dir_back)
+                    self.mutex.release()
                 if not os.path.exists(save_Ann_dir_back):
+                    self.mutex.acquire()
                     os.makedirs(save_Ann_dir_back)
+                    self.mutex.release()
                 img_save_path_2 = os.path.join(save_img_dir_back,img_name+f".{img_mat}")
                 lal_save_path_2 = os.path.join(save_Ann_dir_back,img_name+f".{label_mat}")
                 ImagePIL.save(img_save_path_2)
@@ -704,13 +723,17 @@ def main():
                                 lal_save_path_1 = os.path.join(labels_save_dir, lal_new_name)
                                 class_txt_path = os.path.join(labels_save_dir,'..','classes.txt')
                                 if not os.path.exists(class_txt_path):
+                                    self.mutex.acquire()
                                     with open(class_txt_path, 'w', encoding='utf-8') as clsop:
                                         for class_name in EngCls:
                                             clsop.write(str(class_name)+ '\n')
+                                    self.mutex.release()
                                 data_path = os.path.join(labels_save_dir,'..','data')
                                 if not os.path.exists(os.path.join(data_path,'predefined_classes.txt')):
+                                    self.mutex.acquire()
                                     self.mk_dir(data_path)
                                     shutil.copy(class_txt_path,os.path.join(data_path,'predefined_classes.txt'))
+                                    self.mutex.release()
 
                                 self.write_txt(tmp_PIL, temp_boxes, lal_save_path_1, img_save_path_1, EngCls)
                     else:
@@ -718,10 +741,84 @@ def main():
 
             return 1
 
+        def get_data_thread(self,file_name_set,img_dir_parh,label_dir_path,label_mat,save_img_dir_back,save_Ann_dir_back,num_no):
+            global no_index
+            for img_name in file_name_set:
+                img_mat = img_name.rsplit('.', maxsplit=1)[-1]
+                label_name = img_name.replace(img_mat, 'json')
+                label_save_name = img_name.replace(img_mat, label_mat)
+                if img_mat.lower() in ('bmp', 'png', 'jpg'):
+                    img_path = os.path.join(img_dir_parh, img_name)
+                    label_path = os.path.join(label_dir_path, label_name)
+                    if not os.path.exists(label_path):
+                        self.mutex.acquire()
+                        self.mk_dir(save_img_dir_back)
+                        self.mk_dir(save_Ann_dir_back)
+                        self.mutex.release()
+                        label_save_path = os.path.join(save_Ann_dir_back, label_save_name)
+                        with open(label_save_path, 'w+', encoding='utf8') as f:
+                            pass
+                        img_save_path = os.path.join(save_img_dir_back, img_name)
+                        shutil.copy(img_path, img_save_path)
+                self.mutex.acquire()
+                no_index += 1
+                self.mutex.release()
+
+        def transform_splitdata_thread(self,label_path_set,label_mat,EngCls,mold,save_img_dir,save_Ann_dir,
+                                  save_img_dir_back,save_Ann_dir_back,cam_res,info_q):
+            global Num
+            for JsonPath in label_path_set:
+                bk = 0
+                ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
+                # print(ImagePath)
+                if not os.path.exists(ImagePath):
+                    ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
+                if not os.path.exists(ImagePath):
+                    ImagePath = JsonPath.replace('json', 'png').replace('labels', 'images')
+                if not os.path.exists(ImagePath):
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0] #
+                    info = {'name':ImgName,'mode':1}
+                    info_q.put(info)
+                    #QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
+                    bk += 1
+                if bk == 1:
+                    self.mutex.acquire()
+                    Num += 1
+                    self.mutex.release()
+                    # self.pbar.setValue(Num / total_num * 100)
+                    # QtWidgets.QApplication.processEvents()
+                    continue
+                if platform.system() == "Windows":
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
+                elif platform.system() == "Linux":
+                    ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
+
+                result = self.clip_img(
+                         ImagePath, ImgName, ImgMat,
+                         JsonPath, label_mat,
+                         EngCls, mold,info_q,
+                         save_img_dir, save_Ann_dir,
+                         save_img_dir_back,save_Ann_dir_back,
+                         resolution=cam_res.lower(),
+                         )
+                if not result:
+                    return
+                self.mutex.acquire()
+                Num += 1
+                self.mutex.release()
+                # self.pbar.setValue(Num / total_num * 100)
+                # QtWidgets.QApplication.processEvents()
+
+
+
         def SplitAndTransform(self,mold='VOC',cam_res='4k'):
             JsonPaths, ImgPaths, PType = self.chackPath()
             if not JsonPaths or not ImgPaths:
                 return
+            from queue import Queue
+            warning_q = Queue()
             mold = mold
             if mold.upper() == "VOC".upper():
                 if cam_res.lower() == '4k'.lower():
@@ -762,25 +859,48 @@ def main():
 
             # 另存无标注的数据
             num_no = len(os.listdir(ImgPaths))
+            num_of_every_thread = math.ceil(num_no/10)
+            global no_index
             no_index = 0
-            for img_name in os.listdir(ImgPaths):
-                img_mat = img_name.rsplit('.', maxsplit=1)[-1]
-                label_name = img_name.replace(img_mat, 'json')
-                label_save_name = img_name.replace(img_mat, label_mat)
-                if img_mat.lower() in ('bmp', 'png', 'jpg', 'jpeg'):
-                    img_path = os.path.join(ImgPaths, img_name)
-                    label_path = os.path.join(JsonPaths, label_name)
-                    if not os.path.exists(label_path):
-                        self.mk_dir(save_img_dir_back)
-                        self.mk_dir(save_Ann_dir_back)
-                        label_save_path = os.path.join(save_Ann_dir_back, label_save_name)
-                        with open(label_save_path, 'w+', encoding='utf8') as f:
-                            pass
-                        img_save_path = os.path.join(save_img_dir_back, img_name)
-                        shutil.copy(img_path, img_save_path)
-                no_index += 1
+            for i in range(10):
+                img_name_thread = os.listdir(ImgPaths)[i * num_of_every_thread:(i+1)*num_of_every_thread]
+                th_ = Thread(target=self.get_data_thread,args=(img_name_thread,
+                                     ImgPaths,
+                                     JsonPaths,
+                                     label_mat,
+                                     save_img_dir_back,
+                                     save_Ann_dir_back,
+                                     num_no))
+                th_.start()
+
+            while 1:
                 self.pbar_no.setValue(no_index / num_no * 100)
                 QtWidgets.QApplication.processEvents()
+                print(f'{cam_res}_splitnone:',no_index,num_no)
+                if no_index == num_no:
+                    self.pbar_no.setValue(no_index / num_no * 100)
+                    QtWidgets.QApplication.processEvents()
+                    break
+
+
+            # for img_name in os.listdir(ImgPaths):
+            #     img_mat = img_name.rsplit('.', maxsplit=1)[-1]
+            #     label_name = img_name.replace(img_mat, 'json')
+            #     label_save_name = img_name.replace(img_mat, label_mat)
+            #     if img_mat.lower() in ('bmp', 'png', 'jpg', 'jpeg'):
+            #         img_path = os.path.join(ImgPaths, img_name)
+            #         label_path = os.path.join(JsonPaths, label_name)
+            #         if not os.path.exists(label_path):
+            #             self.mk_dir(save_img_dir_back)
+            #             self.mk_dir(save_Ann_dir_back)
+            #             label_save_path = os.path.join(save_Ann_dir_back, label_save_name)
+            #             with open(label_save_path, 'w+', encoding='utf8') as f:
+            #                 pass
+            #             img_save_path = os.path.join(save_img_dir_back, img_name)
+            #             shutil.copy(img_path, img_save_path)
+            #     no_index += 1
+            #     self.pbar_no.setValue(no_index / num_no * 100)
+            #     QtWidgets.QApplication.processEvents()
 
 
             if "板" in PType:
@@ -802,43 +922,91 @@ def main():
             info["classnames"] = EngCls
             with open(os.path.join(Save_dir, 'classnames.json'), 'w', encoding='utf8') as f:
                 json.dump(info, f, indent=4, separators=(',', ': '))
-            total_num = len(os.listdir(JsonPaths))
+            total_num = len(glob.glob(JsonPaths + "/*.json"))
+            thread_data_num = math.ceil(total_num/10)
+            global Num
             Num = 0
-            for JsonPath in glob.glob(JsonPaths + "/*.json"):
-                bk = 0
-                ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
-                # print(ImagePath)
-                if not os.path.exists(ImagePath):
-                    ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
-                if not os.path.exists(ImagePath):
-                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
-                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
-                    bk += 1
-                if bk == 1:
-                    Num += 1
-                    self.pbar.setValue(Num / total_num * 100)
-                    QtWidgets.QApplication.processEvents()
-                    continue
-                if platform.system() == "Windows":
-                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
-                    ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
-                elif platform.system() == "Linux":
-                    ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
-                    ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
+            for i in range(10):
+                label_path_set = glob.glob(JsonPaths + "/*.json")[i*thread_data_num:(i+1)*thread_data_num]
+                th_ = Thread(target=self.transform_splitdata_thread,args=(label_path_set,
+                                                                     label_mat,
+                                                                     EngCls,
+                                                                     mold,
+                                                                     save_img_dir,
+                                                                     save_Ann_dir,
+                                                                     save_img_dir_back,
+                                                                     save_Ann_dir_back,
+                                                                     cam_res,
+                                                                     warning_q)
+                             )
 
-                result = self.clip_img(
-                         ImagePath, ImgName, ImgMat,
-                         JsonPath, label_mat,
-                         EngCls, mold,
-                         save_img_dir, save_Ann_dir,
-                         save_img_dir_back,save_Ann_dir_back,
-                         resolution=cam_res.lower(),
-                         )
-                if not result:
-                    return
-                Num += 1
+                th_.start()
+            info_mat = ''
+            info_res = ''
+            flag_exit = True
+            while 1:
                 self.pbar.setValue(Num / total_num * 100)
                 QtWidgets.QApplication.processEvents()
+                print(f'{cam_res}_splitnormal:',Num,total_num)
+                if not warning_q.empty():
+                    infos = warning_q.get()
+                    img_name,model_type = tuple(infos.values())
+                    if model_type==1:
+                        info_mat += img_name+'<>'
+                    elif model_type == -1:
+                        if flag_exit:
+                            reply = QtWidgets.QMessageBox.question(self, '警告',
+                                                                   f"{img_name}不在{PType}类别中,是否关闭程序并更新 .bin文件？", QtWidgets.QMessageBox.Yes |
+                                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                            if reply == QtWidgets.QMessageBox.Yes:
+                                sys.exit()
+                            else:
+                                continue
+                    else:
+                        info_res += img_name + '<>'
+                if Num == total_num:
+                    self.pbar.setValue(Num / total_num * 100)
+                    QtWidgets.QApplication.processEvents()
+                    if len(info_mat) != 0 or len(info_res) != 0:
+                        str_linenew = '\n'*40
+                        QtWidgets.QMessageBox.information(self, '提示', f"以下数据不带后缀的表示不存在 或 格式非bmp、jpg、png，带后缀表示分辨率不是{cam_res.upper()}: \n {info_mat}<>"
+                                                                      f"{info_res}{str_linenew} ", )
+                    break
+            # for JsonPath in glob.glob(JsonPaths + "/*.json"):
+            #     bk = 0
+            #     ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
+            #     # print(ImagePath)
+            #     if not os.path.exists(ImagePath):
+            #         ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
+            #     if not os.path.exists(ImagePath):
+            #         ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+            #         QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
+            #         bk += 1
+            #     if bk == 1:
+            #         Num += 1
+            #         self.pbar.setValue(Num / total_num * 100)
+            #         QtWidgets.QApplication.processEvents()
+            #         continue
+            #     if platform.system() == "Windows":
+            #         ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+            #         ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
+            #     elif platform.system() == "Linux":
+            #         ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
+            #         ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
+            #
+            #     result = self.clip_img(
+            #              ImagePath, ImgName, ImgMat,
+            #              JsonPath, label_mat,
+            #              EngCls, mold,
+            #              save_img_dir, save_Ann_dir,
+            #              save_img_dir_back,save_Ann_dir_back,
+            #              resolution=cam_res.lower(),
+            #              )
+            #     if not result:
+            #         return
+            #     Num += 1
+            #     self.pbar.setValue(Num / total_num * 100)
+            #     QtWidgets.QApplication.processEvents()
 
         def split_img_xml(self):
             self.SplitAndTransform(mold='VOC')
@@ -852,92 +1020,33 @@ def main():
         def split_img_yolo_8(self):
             self.SplitAndTransform(mold='YOLO', cam_res='8k')
 
-        def GetBBox(self,mold='VOC'):
-            JsonPaths, ImgPaths, PType = self.chackPath()
-            if not JsonPaths or not ImgPaths:
-                return
-            mold = mold
-            if mold =="VOC":
-                Save_dir = JsonPaths.replace('labels', 'VOCMoldData')
-                save_img_dir = os.path.join(Save_dir, "JPEGImages")
-                save_Ann_dir = os.path.join(Save_dir, "Annotations")
-                save_img_dir_back = os.path.join(Save_dir, "JPEGImagesBackground")
-                save_Ann_dir_back = os.path.join(Save_dir, "AnnotationsBackground")
-                label_mat = 'xml'
-            elif mold == "YOLO":
-                Save_dir = JsonPaths.replace('labels', 'YOLOMoldData')
-                save_img_dir = os.path.join(Save_dir, "Images")
-                save_Ann_dir = os.path.join(Save_dir, "Labels")
-                save_img_dir_back = os.path.join(Save_dir, "ImagesBackground")
-                save_Ann_dir_back = os.path.join(Save_dir, "LabelsBackground")
-                label_mat = 'txt'
+        def transform_data_thread(self,label_path_set,label_mat,EngCls,
+                                  mold,save_img_dir,save_Ann_dir,
+                                  save_img_dir_back,save_Ann_dir_back,
+                                  info_q,):
 
-            self.check_file(Save_dir)
-            self.check_file(save_img_dir)
-            self.check_file(save_Ann_dir)
-            # self.del_dir(save_img_dir_back)
-            # self.del_dir(save_Ann_dir_back)
-
-            # 另存无标注的数据
-            num_no=len(os.listdir(ImgPaths))
-            no_index=0
-            for img_name in os.listdir(ImgPaths):
-                img_mat = img_name.rsplit('.', maxsplit=1)[-1]
-                label_name = img_name.replace(img_mat,'json')
-                label_save_name = img_name.replace(img_mat,label_mat)
-                if img_mat.lower() in ('bmp','png','jpg','jpeg'):
-                    img_path = os.path.join(ImgPaths,img_name)
-                    label_path = os.path.join(JsonPaths,label_name)
-                    if not os.path.exists(label_path):
-                        self.mk_dir(save_img_dir_back)
-                        self.mk_dir(save_Ann_dir_back)
-                        print(f'{img_name}不存在标注数据..........')
-                        label_save_path = os.path.join(save_Ann_dir_back,label_save_name)
-                        with open(label_save_path,'w+',encoding='utf8') as f:
-                            pass
-                        img_save_path = os.path.join(save_img_dir_back,img_name)
-                        shutil.copy(img_path,img_save_path)
-                no_index += 1
-                self.pbar_no.setValue(no_index / num_no * 100)
-                QtWidgets.QApplication.processEvents()
-
-
-            if "板" in PType:
-                EngCls = self.class_info_dict['板材']['英文']
-            elif "棒" in PType:
-                EngCls = self.class_info_dict['棒材']['英文']
-            elif "铸" in PType:
-                EngCls = self.class_info_dict['铸坯']['英文']
-            elif "冷" in PType:
-                EngCls = self.class_info_dict['冷轧']['英文']
-            elif "热" in PType:
-                EngCls = self.class_info_dict['热轧']['英文']
-            elif "符" in PType:
-                EngCls = self.class_info_dict['字符']['英文']
-            else:
-                QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
-                return
-            info ={}
-            info["classnames"] = EngCls
-            with open(os.path.join(Save_dir,'classnames.json'),'w',encoding='utf8') as f:
-                json.dump(info,f,indent=4,separators=(',', ': '))
-
-            total_num = len(os.listdir(JsonPaths))
-            image_index = 0
-            for JsonPath in glob.glob(JsonPaths + "/*.json"):
+            global image_index
+            for JsonPath in label_path_set:
                 bk = 0
                 ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
+
                 # print(ImagePath)
                 if not os.path.exists(ImagePath):
                     ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
                 if not os.path.exists(ImagePath):
-                    ImgName = ImagePath.rsplit('\\')[-1].split('.', maxsplit=1)[0]
-                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
+                    ImagePath = JsonPath.replace('json', 'png').replace('labels', 'images')
+                if not os.path.exists(ImagePath):
+                    ImgName = ImagePath.rsplit('\\')[-1].split('.', maxsplit=1)[0]  #
+                    info = {'name': ImgName, 'mode': 1}
+                    info_q.put(info)
+                    #QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
                     bk += 1
                 if bk == 1:
+                    self.mutex.acquire()
                     image_index += 1
-                    self.pbar.setValue(image_index / total_num * 100)
-                    QtWidgets.QApplication.processEvents()
+                    self.mutex.release()
+                    # self.pbar.setValue(image_index / total_num * 100)
+                    # QtWidgets.QApplication.processEvents()
                     continue
                 if platform.system() == "Windows":
                     ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
@@ -967,40 +1076,273 @@ def main():
                         x1, y1, x2, y2 = x1_tmp, y1_tmp, x2_tmp, y2_tmp
                         className = shape["label"]
                         if str(className) not in EngCls:
-                            QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
+                            #QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
+                            info = {'name': className, 'model': -1}
+                            info_q.put(info)
                             continue
                         box_info.append([x1, y1, x2, y2, className])
 
                 if len(box_info) == 0:
                     if not os.path.exists(save_img_dir_back):
+                        self.mutex.acquire()
                         os.makedirs(save_img_dir_back)
+                        self.mutex.release()
                     if not os.path.exists(save_Ann_dir_back):
+                        self.mutex.acquire()
                         os.makedirs(save_Ann_dir_back)
+                        self.mutex.release()
 
                     img_save_path_2 = os.path.join(save_img_dir_back, ImgName + f".{ImgMat}")
                     lal_save_path_2 = os.path.join(save_Ann_dir_back, ImgName + f".{label_mat}")
                     ImagePIL.save(img_save_path_2)
                     lbl_file = open(lal_save_path_2,'w+',encoding='utf8')
                     lbl_file.close()
+                    self.mutex.acquire()
                     image_index += 1
+                    self.mutex.release()
                 else:
                     if mold == 'VOC':
                         self.write_xml(ImagePIL,box_info,img_name,lal_save_path_1,img_save_path_1)
                     elif mold == 'YOLO':
                         class_txt_path = os.path.join(save_Ann_dir, '..', 'classes.txt')
                         if not os.path.exists(class_txt_path):
+                            self.mutex.acquire()
                             with open(class_txt_path, 'w', encoding='utf-8') as clsop:
                                 for class_name in EngCls:
                                     clsop.write(str(class_name) + '\n')
+                            self.mutex.release()
                         data_path = os.path.join(save_Ann_dir, '..', 'data')
                         if not os.path.exists(os.path.join(data_path, 'predefined_classes.txt')):
+                            self.mutex.acquire()
                             self.mk_dir(data_path)
                             shutil.copy(class_txt_path, os.path.join(data_path, 'predefined_classes.txt'))
+                            self.mutex.release()
                         self.write_txt(ImagePIL,box_info,lal_save_path_1,img_save_path_1,EngCls)
+                    self.mutex.acquire()
                     image_index += 1
+                    self.mutex.release()
+                # self.pbar.setValue(image_index / total_num * 100)
+                # QtWidgets.QApplication.processEvents()
+                # time.sleep(0.05)
+        def GetBBox(self,mold='VOC'):
+            JsonPaths, ImgPaths, PType = self.chackPath()
+            if not JsonPaths or not ImgPaths:
+                return
+            from queue import Queue
+            warning_q = Queue()
+            mold = mold
+            if mold =="VOC":
+                Save_dir = JsonPaths.replace('labels', 'VOCMoldData')
+                save_img_dir = os.path.join(Save_dir, "JPEGImages")
+                save_Ann_dir = os.path.join(Save_dir, "Annotations")
+                save_img_dir_back = os.path.join(Save_dir, "JPEGImagesBackground")
+                save_Ann_dir_back = os.path.join(Save_dir, "AnnotationsBackground")
+                label_mat = 'xml'
+            elif mold == "YOLO":
+                Save_dir = JsonPaths.replace('labels', 'YOLOMoldData')
+                save_img_dir = os.path.join(Save_dir, "Images")
+                save_Ann_dir = os.path.join(Save_dir, "Labels")
+                save_img_dir_back = os.path.join(Save_dir, "ImagesBackground")
+                save_Ann_dir_back = os.path.join(Save_dir, "LabelsBackground")
+                label_mat = 'txt'
+
+            self.check_file(Save_dir)
+            self.check_file(save_img_dir)
+            self.check_file(save_Ann_dir)
+            # self.del_dir(save_img_dir_back)
+            # self.del_dir(save_Ann_dir_back)
+
+            # 另存无标注的数据
+            num_no = len(os.listdir(ImgPaths))
+            num_of_every_thread = math.ceil(num_no / 10)
+            global no_index
+            no_index = 0
+            for i in range(10):
+                img_name_thread = os.listdir(ImgPaths)[i * num_of_every_thread:(i + 1) * num_of_every_thread]
+                th_ = Thread(target=self.get_data_thread, args=(img_name_thread,
+                                                                ImgPaths,
+                                                                JsonPaths,
+                                                                label_mat,
+                                                                save_img_dir_back,
+                                                                save_Ann_dir_back,
+                                                                num_no))
+                th_.start()
+
+            while 1:
+                self.pbar_no.setValue(no_index / num_no * 100)
+                QtWidgets.QApplication.processEvents()
+                print('srcnone:',no_index, num_no)
+                if no_index == num_no:
+                    self.pbar_no.setValue(no_index / num_no * 100)
+                    QtWidgets.QApplication.processEvents()
+                    break
+            # # 另存无标注的数据
+            # num_no=len(os.listdir(ImgPaths))
+            # no_index=0
+            # for img_name in os.listdir(ImgPaths):
+            #     img_mat = img_name.rsplit('.', maxsplit=1)[-1]
+            #     label_name = img_name.replace(img_mat,'json')
+            #     label_save_name = img_name.replace(img_mat,label_mat)
+            #     if img_mat.lower() in ('bmp','png','jpg',):
+            #         img_path = os.path.join(ImgPaths,img_name)
+            #         label_path = os.path.join(JsonPaths,label_name)
+            #         if not os.path.exists(label_path):
+            #             self.mk_dir(save_img_dir_back)
+            #             self.mk_dir(save_Ann_dir_back)
+            #             print(f'{img_name}不存在标注数据..........')
+            #             label_save_path = os.path.join(save_Ann_dir_back,label_save_name)
+            #             with open(label_save_path,'w+',encoding='utf8') as f:
+            #                 pass
+            #             img_save_path = os.path.join(save_img_dir_back,img_name)
+            #             shutil.copy(img_path,img_save_path)
+            #     no_index += 1
+            #     self.pbar_no.setValue(no_index / num_no * 100)
+            #     QtWidgets.QApplication.processEvents()
+
+
+            if "板" in PType:
+                EngCls = self.class_info_dict['板材']['英文']
+            elif "棒" in PType:
+                EngCls = self.class_info_dict['棒材']['英文']
+            elif "铸" in PType:
+                EngCls = self.class_info_dict['铸坯']['英文']
+            elif "冷" in PType:
+                EngCls = self.class_info_dict['冷轧']['英文']
+            elif "热" in PType:
+                EngCls = self.class_info_dict['热轧']['英文']
+            elif "符" in PType:
+                EngCls = self.class_info_dict['字符']['英文']
+            else:
+                QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
+                return
+            info ={}
+            info["classnames"] = EngCls
+            with open(os.path.join(Save_dir,'classnames.json'),'w',encoding='utf8') as f:
+                json.dump(info,f,indent=4,separators=(',', ': '))
+
+            total_num = len(glob.glob(JsonPaths + "/*.json"))
+            thread_data_num = math.ceil(total_num / 10)
+            global image_index
+            image_index = 0
+            for j in range(10):
+                label_path_set = glob.glob(JsonPaths + "/*.json")[j*thread_data_num:(j+1)*thread_data_num]
+                th_ = Thread(target=self.transform_data_thread,
+                             args=(label_path_set,
+                                   label_mat,
+                                   EngCls,
+                                   mold,
+                                   save_img_dir,
+                                   save_Ann_dir,
+                                   save_img_dir_back,
+                                   save_Ann_dir_back,
+                                   warning_q,)
+                             )
+                th_.start()
+            info_mat = ''
+            flag_exit = True
+            while 1:
                 self.pbar.setValue(image_index / total_num * 100)
                 QtWidgets.QApplication.processEvents()
-                # time.sleep(0.05)
+                print('srcnormal:',image_index,total_num)
+                if not warning_q.empty():
+                    infos = warning_q.get()
+                    img_name, model_type = tuple(infos.values())
+                    if model_type ==1:
+                        info_mat += img_name + '<>'
+                    elif model_type == -1:
+                        if flag_exit:
+                            reply = QtWidgets.QMessageBox.question(self, '警告',
+                                                                   f"{img_name}不在{PType}类别中,是否关闭程序并更新 .bin文件？", QtWidgets.QMessageBox.Yes |
+                                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                            if reply == QtWidgets.QMessageBox.Yes:
+                                sys.exit()
+                            else:
+                                continue
+                if image_index == total_num:
+                    self.pbar.setValue(image_index / total_num * 100)
+                    QtWidgets.QApplication.processEvents()
+                    if len(info_mat) != 0:
+                        str_linenew = '\n' * 40
+                        QtWidgets.QMessageBox.information(self, '提示',
+                                                          f"以下数据表示不存在 或 格式非bmp、jpg、png: \n {info_mat}{str_linenew}",)
+                    break
+            # for JsonPath in glob.glob(JsonPaths + "/*.json"):
+            #     bk = 0
+            #     ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
+            #     # print(ImagePath)
+            #     if not os.path.exists(ImagePath):
+            #         ImagePath = JsonPath.replace('json', 'jpg').replace('labels', 'images')
+            #     if not os.path.exists(ImagePath):
+            #         ImgName = ImagePath.rsplit('\\')[-1].split('.', maxsplit=1)[0]
+            #         QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg! 点击OK键继续！", )
+            #         bk += 1
+            #     if bk == 1:
+            #         image_index += 1
+            #         self.pbar.setValue(image_index / total_num * 100)
+            #         QtWidgets.QApplication.processEvents()
+            #         continue
+            #     if platform.system() == "Windows":
+            #         ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+            #         ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
+            #     elif platform.system() == "Linux":
+            #         ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
+            #         ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
+            #
+            #     #映射新路径
+            #     img_save_path_1 = os.path.join(save_img_dir,ImgName+f".{ImgMat}")
+            #     lal_save_path_1 = os.path.join(save_Ann_dir,ImgName+f".{label_mat}")
+            #
+            #     ImagePIL = Image.open(ImagePath).convert('L')  # w,h
+            #     imgW,imgH = ImagePIL.size
+            #     img_name = ImgName+f".{ImgMat}"
+            #     data = json.load(open(JsonPath, 'r', encoding='utf8'))
+            #     shapeList = data['shapes']
+            #     box_info = []
+            #     for shape in shapeList:
+            #         if shape['shape_type'] == 'rectangle':
+            #             points = self.parse_points(shape['points'],imgH,imgW)
+            #             x1,y1,x2,y2 = abs(points[0][0]),abs(points[0][1]),abs(points[1][0]),abs(points[1][1])
+            #             x1_tmp = min(x1,x2)
+            #             y1_tmp = min(y1,y2)
+            #             x2_tmp = max(x1,x2)
+            #             y2_tmp = max(y1,y2)
+            #             x1, y1, x2, y2 = x1_tmp, y1_tmp, x2_tmp, y2_tmp
+            #             className = shape["label"]
+            #             if str(className) not in EngCls:
+            #                 QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
+            #                 continue
+            #             box_info.append([x1, y1, x2, y2, className])
+            #
+            #     if len(box_info) == 0:
+            #         if not os.path.exists(save_img_dir_back):
+            #             os.makedirs(save_img_dir_back)
+            #         if not os.path.exists(save_Ann_dir_back):
+            #             os.makedirs(save_Ann_dir_back)
+            #
+            #         img_save_path_2 = os.path.join(save_img_dir_back, ImgName + f".{ImgMat}")
+            #         lal_save_path_2 = os.path.join(save_Ann_dir_back, ImgName + f".{label_mat}")
+            #         ImagePIL.save(img_save_path_2)
+            #         lbl_file = open(lal_save_path_2,'w+',encoding='utf8')
+            #         lbl_file.close()
+            #         image_index += 1
+            #     else:
+            #         if mold == 'VOC':
+            #             self.write_xml(ImagePIL,box_info,img_name,lal_save_path_1,img_save_path_1)
+            #         elif mold == 'YOLO':
+            #             class_txt_path = os.path.join(save_Ann_dir, '..', 'classes.txt')
+            #             if not os.path.exists(class_txt_path):
+            #                 with open(class_txt_path, 'w', encoding='utf-8') as clsop:
+            #                     for class_name in EngCls:
+            #                         clsop.write(str(class_name) + '\n')
+            #             data_path = os.path.join(save_Ann_dir, '..', 'data')
+            #             if not os.path.exists(os.path.join(data_path, 'predefined_classes.txt')):
+            #                 self.mk_dir(data_path)
+            #                 shutil.copy(class_txt_path, os.path.join(data_path, 'predefined_classes.txt'))
+            #             self.write_txt(ImagePIL,box_info,lal_save_path_1,img_save_path_1,EngCls)
+            #         image_index += 1
+            #     self.pbar.setValue(image_index / total_num * 100)
+            #     QtWidgets.QApplication.processEvents()
+            #     # time.sleep(0.05)
 
         def write_txt(self,img,boxes,txt_path,img_path,class_name):
             #坐标转换
