@@ -16,6 +16,7 @@ import imgviz
 import json
 import shutil
 import base64
+import signal
 from Crypto.Cipher import AES
 import numpy as np
 from threading import Thread,Lock
@@ -583,20 +584,31 @@ def main():
                      debug=False):
 
             ImagePIL = Image.open(img_path).convert('L')  # w,h
-            img_name_warn = os.path.basename(img_path)
-            w_ori, h_ori= ImagePIL.size  # 保存原图的大小
-            if resolution.lower() == '4k'.lower():
-                if w_ori != 4096:
-                    info = {'name':img_name_warn,'model':4}
-                    info_q.put(info)
-                    #QtWidgets.QMessageBox.warning(self, '警告', f"过滤当前非4k图像 {img_name_warn},点击 ok  继续！《请选择仅包含(4k)图像所在的样本库进行切分》", )
-                    return 2
-            else:
-                if w_ori != 8192:
-                    info = {'name': img_name_warn, 'model': 8}
-                    info_q.put(info)
-                    # QtWidgets.QMessageBox.warning(self, '警告', f"过滤当前非8k图像 {img_name_warn},点击 ok  继续！《请选择仅包含(8k)图像所在的样本库进行切分》", )
-                    return 2
+            w_ori, h_ori= ImagePIL.size  # 原图的大小
+            # img_name_warn = os.path.basename(img_path)
+            # if resolution.lower() == '4k'.lower():
+            #     if w_ori != 4096:
+            #         info = {'name':img_name_warn,'model':4}
+            #         info_q.put(info)
+            #         #QtWidgets.QMessageBox.warning(self, '警告', f"过滤当前非4k图像 {img_name_warn},点击 ok  继续！《请选择仅包含(4k)图像所在的样本库进行切分》", )
+            #         return 2
+            #     else:
+            #         if h_ori < w_ori:
+            #             w_win_size = h_ori
+            #         else:
+            #             return 0
+            #
+            # else:
+            #     if w_ori != 8192:
+            #         info = {'name': img_name_warn, 'model': 8}
+            #         info_q.put(info)
+            #         # QtWidgets.QMessageBox.warning(self, '警告', f"过滤当前非8k图像 {img_name_warn},点击 ok  继续！《请选择仅包含(8k)图像所在的样本库进行切分》", )
+            #         return 2
+            #     else:
+            #         if h_ori < w_ori:
+            #             w_win_size = h_ori
+            #         else:
+            #             return 0
             img = np.array(ImagePIL)
             # print(f'{img_path}:::{img.shape}')
             # img = cv2.resize(img, (2048, 2048))#可以resize也可以不resize，看情况而定
@@ -641,16 +653,23 @@ def main():
 
             i = 0
             w_win_size = 1024
-            h_win_size = h
-            if resolution.lower() == '4k'.lower():
-                stride = 1024 - 256  # 重叠的大小（768），设置这个可以使分块有重叠  stride =win_size 说明设置的分块没有重叠
-            else:
-                stride = 896
-            for r in range(0, (h - h_win_size) + 1, stride):  # H方向进行切分
-                for c in range(0, (w - w_win_size) + 1, stride):  # W方向进行切分
+            h_win_size = 1024
+            stride = 1024-256
+            # if resolution.lower() == '4k'.lower():
+            #     stride = 1024 - 256  # 重叠的大小（768），设置这个可以使分块有重叠  stride =win_size 说明设置的分块没有重叠
+            # else:
+            #     stride = 896
+            for r in range(0,h):
+            #for r in range(0, (h - h_win_size) + 1, stride):  # H方向进行切分
+                for c in range(0,w):
+                #for c in range(0, (w - w_win_size) + 1, stride):  # W方向进行切分
                     flag = np.zeros([1, len(res)])  # 修改flag = np.zeros([1, len(res)])
                     youwu = False  # 是否有物体
                     xiefou = True  # 是否记录
+                    y1_,y2_,x1_,x2_ = r,r+h_win_size,c,c+w_win_size
+                    if y2_ >= h:
+                        y2_ = h-1
+                    if x2_ >= w:
 
                     tmp = img[r: r + h_win_size, c: c + w_win_size]
                     tmp_PIL = Image.fromarray(tmp)
@@ -804,7 +823,7 @@ def main():
                          resolution=cam_res.lower(),
                          )
                 if not result:
-                    return
+                    os.kill(os.getpid(), signal.SIGINT)
                 self.mutex.acquire()
                 Num += 1
                 self.mutex.release()
