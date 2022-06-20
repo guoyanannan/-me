@@ -706,7 +706,7 @@ class MainWindow(QtWidgets.QMainWindow):
             view=self.menu(self.tr("&视图")),
             # help=self.menu(self.tr("&帮助")),
             select=self.menu(self.tr("&产品类型")),
-            select_name=self.menu(self.tr("&👆字符👆")),
+            select_name=self.menu(self.tr("👉&字符👈")),
             # recentFiles=QtWidgets.QMenu(self.tr("Open &Recent")),
             recentFiles=QtWidgets.QMenu(self.tr("&最近打开")),
             labelList=labelMenu,
@@ -2152,7 +2152,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameLZ(self):
 
         if self.select_op:
-            Pname = '👉冷轧👈'
+            Pname = ' 👉冷轧👈 '
             self.menus.select_name.setTitle(Pname)
 
             self.EngCls = self.class_info_dict['冷轧']['英文']
@@ -2178,7 +2178,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def getClsNameLZ_win(self,fuction_close):
         if self.select_op:
-            Pname = '👉冷轧👈'
+            Pname = ' 👉冷轧👈 '
             self.menus.select_name.setTitle(Pname)
 
             self.EngCls = self.class_info_dict['冷轧']['英文']
@@ -2208,7 +2208,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameRZ(self):
 
         if self.select_op:
-            Pname = '👉热轧👈'
+            Pname = ' 👉热轧👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['热轧']['英文']
             self.ChiCls = self.class_info_dict['热轧']['中文']
@@ -2232,7 +2232,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameRZ_win(self,fuction_close):
 
         if self.select_op:
-            Pname = '👉热轧👈'
+            Pname = ' 👉热轧👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['热轧']['英文']
             self.ChiCls = self.class_info_dict['热轧']['中文']
@@ -2260,7 +2260,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameBC(self):
 
         if self.select_op:
-            Pname = '👉板材👈'
+            Pname = ' 👉板材👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['板材']['英文']
             self.ChiCls = self.class_info_dict['板材']['中文']
@@ -2284,7 +2284,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameBC_win(self,fuction_close):
 
         if self.select_op:
-            Pname = '👉板材👈'
+            Pname = ' 👉板材👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['板材']['英文']
             self.ChiCls = self.class_info_dict['板材']['中文']
@@ -2312,7 +2312,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameCB(self):
 
         if self.select_op:
-            Pname = '👉棒材👈'
+            Pname = ' 👉棒材👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['棒材']['英文']
             self.ChiCls = self.class_info_dict['棒材']['中文']
@@ -2336,7 +2336,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameCB_win(self,fuction_close):
 
         if self.select_op:
-            Pname = '👉棒材👈'
+            Pname = ' 👉棒材👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['棒材']['英文']
             self.ChiCls = self.class_info_dict['棒材']['中文']
@@ -2365,7 +2365,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameZP(self):
 
         if self.select_op:
-            Pname = '👉铸坯👈'
+            Pname = ' 👉铸坯👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['铸坯']['英文']
             self.ChiCls = self.class_info_dict['铸坯']['中文']
@@ -2388,7 +2388,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameZP_win(self,fuction_close):
 
         if self.select_op:
-            Pname = '👉铸坯👈'
+            Pname = ' 👉铸坯👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['铸坯']['英文']
             self.ChiCls = self.class_info_dict['铸坯']['中文']
@@ -2415,7 +2415,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameZF(self):
 
         if self.select_op:
-            Pname = '👉字符👈'
+            Pname = ' 👉字符👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['字符']['英文']
             self.ChiCls = self.class_info_dict['字符']['中文']
@@ -2440,7 +2440,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def getClsNameZF_win(self,fuction_close):
 
         if self.select_op:
-            Pname = '👉字符👈'
+            Pname = ' 👉字符👈 '
             self.menus.select_name.setTitle(Pname)
             self.EngCls = self.class_info_dict['字符']['英文']
             self.ChiCls = self.class_info_dict['字符']['中文']
