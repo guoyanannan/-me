@@ -941,6 +941,8 @@ def main():
                         str_linenew = '\n'*40
                         QtWidgets.QMessageBox.information(self, '提示', f"以下数据不存在 或 非bmp、非jpg、非png: \n {info_mat}{str_linenew}", )
                         break
+                    elif len(info_mat) == 0 and warning_q.empty():
+                        break
 
         def split_img_xml(self):
             self.SplitAndTransform(mold='VOC')
@@ -1177,6 +1179,8 @@ def main():
                         print(info_mat)
                         QtWidgets.QMessageBox.information(self, '提示',
                                                           f"以下数据表示不存在 或 非bmp、非jpg、非png: \n {info_mat}{str_linenew}",)
+                        break
+                    elif len(info_mat) == 0 and warning_q.empty():
                         break
 
         def write_txt(self,img,boxes,txt_path,img_path,class_name):
