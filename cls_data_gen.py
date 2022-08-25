@@ -2,15 +2,20 @@ import base64
 import json
 from Crypto.Cipher import AES
 
+
 # str不是16的倍数那就补足为16的倍数
 def add_to_16(value):
     while len(value) % 16 != 0:
         value += '\0'
+    print(value)
     return str.encode(value)  # 返回byte
+
+
 # 加密
-def encrypt_oracle():
+def encrypt_oracle(v: str = '1.0.0.0'):
     key= 'Nercar701'
     cls_info = {
+                'version': v,
                 '字符':{
                       '英文': ['BeiJing','0','1','2','3','4','5','6','7','8','9',
                               'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
@@ -18,7 +23,7 @@ def encrypt_oracle():
                               '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
                               'f','g','h','i','g','k','l','m','n','o','p','q','r','s','t',
                               'u','v','w','x','y','z'],
-                      '中文':['背景','0','1','2','3','4','5','6','7','8','9',
+                      '中文': ['背景','0','1','2','3','4','5','6','7','8','9',
                              'A','B','C','D','E','F','G','H','I','G','K','L','M','N',
                              'O','P','Q','R','S','T','U','V','W','X','Y','Z','!','@',
                              '#','$','%','^','&','*','(',')','_','+','a','b','c','d','e',
@@ -99,9 +104,10 @@ def encrypt_oracle():
                            'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen'],
                        '中文':['背景', '纵向裂纹', '横向裂纹', '划伤', '水渣印', '辊印',
                            '渣皮', '切割开口', '停止线', '擦划伤', '端面焊渣', '接痕']
-                       }
+                       },
                 }
     mystr = json.dumps(cls_info)
+    print(mystr)
     text = base64.b64encode(mystr.encode('utf-8')).decode('ascii')
     print('base64：',text)
     # 初始化加密器
@@ -113,7 +119,7 @@ def encrypt_oracle():
     encrypted_text = str(base64.encodebytes(encrypt_aes), encoding='utf-8')  # 执行加密并转码返回bytes
     print('加密后转为字节：',encrypted_text) #测试打印加密数据
     # 写入加密数据到文件
-    with open("bankdata.bin","w") as bankdata:
+    with open("classname.bin","w") as bankdata:
         bankdata.write(encrypted_text)
 
 
@@ -122,7 +128,7 @@ def decrypt_oralce():
     # 秘钥
     key = 'Nercar701'
     # 密文
-    with open('bankdata.bin', 'r', encoding='utf-8') as banks:
+    with open('classname.bin', 'r', encoding='utf-8') as banks:
         text = banks.read()
     # 初始化加密器
     aes = AES.new(add_to_16(key), AES.MODE_ECB)
@@ -131,9 +137,11 @@ def decrypt_oralce():
     # bytes解密
     decrypted_text = str(aes.decrypt(base64_decrypted),encoding='utf-8') # 执行解密密并转码返回str
     decrypted_text = base64.b64decode(decrypted_text.encode('utf-8')).decode('utf-8')
+
     # print(decrypted_text)
     #print(json.loads(decrypted_text))
     # print(type(json.loads(decrypted_text)))
+    print('----------版本----------- \n', json.loads(decrypted_text)['version'], '\n',len(json.loads(decrypted_text)['version']))
     print('----------冷轧----------- \n',json.loads(decrypted_text)['冷轧']['英文'],':\n',len(json.loads(decrypted_text)['冷轧']['英文']))
     print(json.loads(decrypted_text)['冷轧']['中文'],':\n',len(json.loads(decrypted_text)['冷轧']['中文']))
     print('----------热轧----------- \n',json.loads(decrypted_text)['热轧']['英文'],':\n',len(json.loads(decrypted_text)['热轧']['英文']))
@@ -146,9 +154,9 @@ def decrypt_oralce():
     print(json.loads(decrypted_text)['铸坯']['中文'],':\n',len(json.loads(decrypted_text)['铸坯']['中文']))
     print('----------字符----------- \n',json.loads(decrypted_text)['字符']['英文'],':\n',len(json.loads(decrypted_text)['字符']['英文']))
     print(json.loads(decrypted_text)['字符']['中文'],':\n',len(json.loads(decrypted_text)['字符']['中文']))
-
+    return json.loads(decrypted_text)
 
 
 if __name__ == '__main__':
-    encrypt_oracle( )
-    decrypt_oralce( )
+    encrypt_oracle()
+    class_defect_infos = decrypt_oralce()

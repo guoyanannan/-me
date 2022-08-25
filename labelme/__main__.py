@@ -21,6 +21,7 @@ from Crypto.Cipher import AES
 import numpy as np
 from threading import Thread,Lock
 import xml.etree.ElementTree as ET
+from urllib import request
 from xml.dom.minidom import Document
 from PIL import Image,ImageDraw
 from qtpy import QtCore
@@ -33,6 +34,59 @@ from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon
 
+PATH_BIN = 'c:/classname.bin'
+
+def load_config():
+    formal_v = ''
+    temp_file = False
+    url = 'https://raw.githubusercontent.com/guoyanannan/-me/master/classname.bin'
+    if os.path.exists(PATH_BIN):
+        temp_file = True
+        formal_v = decrypt_ase(PATH_BIN)['version']
+        download = 'c:/%s%s' % ('temp', os.path.basename(PATH_BIN))
+    else:
+        download = PATH_BIN
+
+    while 1:
+        try:
+            request.urlretrieve(url, download)
+            break
+        except:
+            # QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(), '错误', f"网络异常,请检查当前目录{os.getcwd()}")
+            # bin文件存在,更新
+            if temp_file:
+                prompt_info = "网络异常，是否继续更新类别文件？"
+                reply = QtWidgets.QMessageBox.question(QtWidgets.QMainWindow(), '提示',
+                                                       prompt_info, QtWidgets.QMessageBox.Yes |
+                                                       QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                if reply == QtWidgets.QMessageBox.Yes:
+                    continue
+                else:
+                    break
+            else:
+                prompt_info = "网络异常，是否继续下载类别文件？"
+                formal_info = f'请通过{url}手动下载类别文件,并放至在C盘根目录！！！'
+                reply = QtWidgets.QMessageBox.question(QtWidgets.QMainWindow(), '提示',
+                                                       prompt_info, QtWidgets.QMessageBox.Yes |
+                                                       QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                if reply == QtWidgets.QMessageBox.Yes:
+                    continue
+                else:
+                    QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(), '提示',formal_info )
+                    sys.exit()
+
+    temp_v = decrypt_ase(download)['version']
+    if formal_v and temp_v and temp_v == formal_v:
+        os.remove(download)
+    elif formal_v and temp_v and temp_v != formal_v:
+        os.remove(PATH_BIN)
+        os.rename(download, PATH_BIN)
+
+
+
+
+
+
 
 
 # str不是16的倍数那就补足为16的倍数
@@ -40,6 +94,7 @@ def add_to_16(value):
     while len(value) % 16 != 0:
         value += '\0'
     return str.encode(value)  # 返回byte
+
 
 def decrypt_ase(path):
     # 秘钥
@@ -55,6 +110,7 @@ def decrypt_ase(path):
     decrypted_text = str(aes.decrypt(base64_decrypted),encoding='utf-8') # 执行解密密并转码返回str
     decrypted_text = base64.b64decode(decrypted_text.encode('utf-8')).decode('utf-8')
     return json.loads(decrypted_text)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -212,8 +268,12 @@ def main():
     # 汉化
     # app.installTranslator(translator)
     #解密文件得到钢种缺陷类别信息
+    if not os.path.exists(PATH_BIN):
+        pass
+    else:
+
     try:
-        class_names = decrypt_ase('bankdata.bin')
+        class_names = decrypt_ase('classname.bin')
     except:
         QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(),'错误', f"缺少.bin文件,请检查当前目录{os.getcwd()}")
         sys.exit()
