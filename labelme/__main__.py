@@ -35,15 +35,19 @@ from labelme.logger import logger
 from labelme.utils import newIcon
 
 PATH_BIN = 'c:/classname.bin'
+TEMP_PATH_BIN = 'c:/tempclassname.bin'
 
 def load_config():
-    formal_v = ''
+    formal_name = ''
     temp_file = False
     url = 'https://raw.githubusercontent.com/guoyanannan/-me/master/classname.bin'
     if os.path.exists(PATH_BIN):
-        temp_file = True
-        formal_v = decrypt_ase(PATH_BIN)['version']
-        download = 'c:/%s%s' % ('temp', os.path.basename(PATH_BIN))
+        formal_name = decrypt_ase(PATH_BIN)
+        if formal_name:
+            temp_file = True
+            download = TEMP_PATH_BIN
+        else:
+            download = PATH_BIN
     else:
         download = PATH_BIN
 
@@ -54,6 +58,8 @@ def load_config():
         except:
             # QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(), '错误', f"网络异常,请检查当前目录{os.getcwd()}")
             # bin文件存在,更新
+            if os.path.exists(download):
+                os.remove(download)
             if temp_file:
                 prompt_info = "网络异常，是否继续更新类别文件？"
                 reply = QtWidgets.QMessageBox.question(QtWidgets.QMainWindow(), '提示',
@@ -74,19 +80,17 @@ def load_config():
                 else:
                     QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(), '提示',formal_info )
                     sys.exit()
-
-    temp_v = decrypt_ase(download)['version']
-    if formal_v and temp_v and temp_v == formal_v:
-        os.remove(download)
-    elif formal_v and temp_v and temp_v != formal_v:
-        os.remove(PATH_BIN)
-        os.rename(download, PATH_BIN)
-
-
-
-
-
-
+    #['version']
+    temp_name = decrypt_ase(download)
+    if formal_name: # 原始bin文件存完整存在时
+        if temp_name == formal_name:
+            os.remove(TEMP_PATH_BIN)
+        else:
+            os.remove(PATH_BIN)
+            os.rename(TEMP_PATH_BIN, PATH_BIN)
+        return temp_name
+    else: # 原始bin文件不存在或文件不完整
+        return temp_name
 
 
 # str不是16的倍数那就补足为16的倍数
@@ -97,19 +101,22 @@ def add_to_16(value):
 
 
 def decrypt_ase(path):
-    # 秘钥
-    key = 'Nercar701'
-    # 密文
-    with open(path, 'r', encoding='utf-8') as banks:
-        text = banks.read()
-    # 初始化加密器
-    aes = AES.new(add_to_16(key), AES.MODE_ECB)
-    # 优先逆向解密base64成bytes
-    base64_decrypted = base64.decodebytes(text.encode(encoding='utf-8'))
-    # bytes解密
-    decrypted_text = str(aes.decrypt(base64_decrypted),encoding='utf-8') # 执行解密密并转码返回str
-    decrypted_text = base64.b64decode(decrypted_text.encode('utf-8')).decode('utf-8')
-    return json.loads(decrypted_text)
+    try:
+        # 秘钥
+        key = 'Nercar701'
+        # 密文
+        with open(path, 'r', encoding='utf-8') as banks:
+            text = banks.read()
+        # 初始化加密器
+        aes = AES.new(add_to_16(key), AES.MODE_ECB)
+        # 优先逆向解密base64成bytes
+        base64_decrypted = base64.decodebytes(text.encode(encoding='utf-8'))
+        # bytes解密
+        decrypted_text = str(aes.decrypt(base64_decrypted),encoding='utf-8') # 执行解密密并转码返回str
+        decrypted_text = base64.b64decode(decrypted_text.encode('utf-8')).decode('utf-8')
+        return json.loads(decrypted_text)
+    except:
+        return 0
 
 
 def main():
@@ -268,16 +275,12 @@ def main():
     # 汉化
     # app.installTranslator(translator)
     #解密文件得到钢种缺陷类别信息
-    if not os.path.exists(PATH_BIN):
-        pass
-    else:
-
-    try:
-        class_names = decrypt_ase('classname.bin')
-    except:
-        QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(),'错误', f"缺少.bin文件,请检查当前目录{os.getcwd()}")
-        sys.exit()
-
+    # try:
+    #     class_names = decrypt_ase('classname.bin')
+    # except:
+    #     QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(),'错误', f"缺少.bin文件,请检查当前目录{os.getcwd()}")
+    #     sys.exit()
+    class_names = load_config()
 
     #标注窗口
     win = MainWindow(

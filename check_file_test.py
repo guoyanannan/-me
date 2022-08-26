@@ -1,5 +1,6 @@
 from urllib import request
 import shutil
+import os
 
 url = 'https://raw.githubusercontent.com/guoyanannan/-me/master/bankdata.bin'
 print ("downloading with urllib")
@@ -7,7 +8,7 @@ download= url.split('/')[-1]#这里是直接按照原来的文件名下载，如
 # request.urlretrieve(url, download)
 try:
     _ = request.urlretrieve(url, download)
-    print(_)
+    print(os.path.getsize(download)//1024)
 except Exception as E:
     print(E)
 

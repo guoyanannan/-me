@@ -20,13 +20,13 @@ def decrypt_oralce():
     aes = AES.new(add_to_16(key), AES.MODE_ECB)
     # 优先逆向解密base64成bytes
     base64_decrypted = base64.decodebytes(text.encode(encoding='utf-8'))
-    print(base64_decrypted)
+    print(base64_decrypted,type(base64_decrypted))
     # bytes解密
     decrypted_text = str(aes.decrypt(base64_decrypted),encoding='utf-8') # 执行解密密并转码返回str
     decrypted_text = base64.b64decode(decrypted_text.encode('utf-8')).decode('utf-8')
 
-    # print(decrypted_text)
-    #print(json.loads(decrypted_text))
+    print(decrypted_text)
+    # print(json.loads(decrypted_text))
     # print(type(json.loads(decrypted_text)))
     print('----------冷轧----------- \n',json.loads(decrypted_text)['冷轧']['英文'],':\n',len(json.loads(decrypted_text)['冷轧']['英文']))
     print(json.loads(decrypted_text)['冷轧']['中文'],':\n',len(json.loads(decrypted_text)['冷轧']['中文']))
