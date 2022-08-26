@@ -158,5 +158,5 @@ def decrypt_oralce():
 
 
 if __name__ == '__main__':
-    encrypt_oracle()
+    encrypt_oracle(v='1.0.0.0')
     class_defect_infos = decrypt_oralce()

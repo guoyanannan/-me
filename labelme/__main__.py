@@ -32,12 +32,13 @@ from labelme import __version__
 from labelme.app import MainWindow
 from labelme.config import get_config
 from labelme.logger import logger
-from labelme.utils import newIcon
+from labelme.utils import newIcon,info_box
 
-PATH_BIN = 'c:/classname.bin'
-TEMP_PATH_BIN = 'c:/tempclassname.bin'
+PATH_BIN = f'C:/Users/{os.getlogin()}/classname.bin'
+TEMP_PATH_BIN = f'C:/Users/{os.getlogin()}/tempclassname.bin'
 
-def load_config():
+
+def load_config(windows):
     formal_name = ''
     temp_file = False
     url = 'https://raw.githubusercontent.com/guoyanannan/-me/master/classname.bin'
@@ -53,9 +54,11 @@ def load_config():
 
     while 1:
         try:
+            windows(value='检查更新中......',delay=1)
             request.urlretrieve(url, download)
+            windows(value='检查更新完毕.....',delay=1)
             break
-        except:
+        except Exception as E:
             # QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(), '错误', f"网络异常,请检查当前目录{os.getcwd()}")
             # bin文件存在,更新
             if os.path.exists(download):
@@ -82,14 +85,22 @@ def load_config():
                     sys.exit()
     #['version']
     temp_name = decrypt_ase(download)
-    if formal_name: # 原始bin文件存完整存在时
-        if temp_name == formal_name:
-            os.remove(TEMP_PATH_BIN)
-        else:
-            os.remove(PATH_BIN)
-            os.rename(TEMP_PATH_BIN, PATH_BIN)
-        return temp_name
-    else: # 原始bin文件不存在或文件不完整
+    if formal_name:  # 原始bin文件存完整存在时
+        if temp_name:  # 临时bin文件下载成功
+            if temp_name == formal_name:
+                os.remove(TEMP_PATH_BIN)
+                print(TEMP_PATH_BIN)
+            else:
+                os.remove(PATH_BIN)
+                print(PATH_BIN)
+                os.rename(TEMP_PATH_BIN, PATH_BIN)
+                print(TEMP_PATH_BIN,PATH_BIN)
+            return temp_name
+        else:  # 临时bin文件下载失败,可能会残留临时文件
+            if os.path.exists(TEMP_PATH_BIN):
+                os.remove(TEMP_PATH_BIN)
+            return formal_name
+    else:  # 原始bin文件不存在或文件不完整
         return temp_name
 
 
@@ -280,7 +291,7 @@ def main():
     # except:
     #     QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(),'错误', f"缺少.bin文件,请检查当前目录{os.getcwd()}")
     #     sys.exit()
-    class_names = load_config()
+    class_names = load_config(windows=info_box)
 
     #标注窗口
     win = MainWindow(
@@ -515,7 +526,6 @@ def main():
                 self.pbar.setValue(image_index / total_num * 100)
                 QtWidgets.QApplication.processEvents()
                 # time.sleep(0.05)
-
 
         def GenSegData(self):
             JsonPaths, ImgPaths, PType = self.chackPath()
@@ -1006,7 +1016,6 @@ def main():
                     elif len(info_mat) == 0 and warning_q.empty():
                         break
 
-
         def split_img_xml(self):
             self.SplitAndTransform(mold='VOC')
 
@@ -1123,6 +1132,7 @@ def main():
                 # self.pbar.setValue(image_index / total_num * 100)
                 # QtWidgets.QApplication.processEvents()
                 # time.sleep(0.05)
+
         def GetBBox(self,mold='VOC'):
             JsonPaths, ImgPaths, PType = self.chackPath()
             if not JsonPaths or not ImgPaths:
@@ -1247,7 +1257,6 @@ def main():
                     elif len(info_mat) == 0 and warning_q.empty():
                         break
 
-
         def write_txt(self,img,boxes,txt_path,img_path,class_name):
             #坐标转换
             def convert(size, box):
@@ -1303,11 +1312,10 @@ def main():
                 create_xml_node('ymax', ymax, bndbox)
 
             use_img_w, use_img_h = img.size
-            if img.mode is 'RGB':
+            if img.mode == 'RGB':
                 use_img_depth = 3
             else:
                 use_img_depth = 1
-
 
             # write xml info
             doc = Document()
@@ -1386,6 +1394,7 @@ def main():
             datetime = QtCore.QDateTime.currentDateTime()
             text = datetime.toString('yyyy-MM-dd HH:mm:ss')
             self.label3.setText(text)
+
         def initUI(self):
             #进度条
             self.Num = 0
@@ -1479,7 +1488,7 @@ def main():
             self.lin_2.resize(200,30)
             self.lin_2.move(self.label2.x()+0.7*self.label2.width(),self.label2.y())
             self.label3.move(self.label2.x() + 0.7 * self.label2.width(), self.label1.y())
-            self.setGeometry(300, 300, 600, 535)
+            self.setGeometry(300, 300, 600, 550)
             self.setWindowTitle('标注工具[测试版本v1.0.0]:BKVISION')
 
             #固定窗口大小

@@ -14,20 +14,21 @@ def decrypt_oralce():
     # 秘钥
     key = 'Nercar701'
     # 密文
-    with open('bankdata.bin', 'r', encoding='utf-8') as banks:
+    with open('classname.bin', 'r', encoding='utf-8') as banks:
         text = banks.read()
     # 初始化加密器
     aes = AES.new(add_to_16(key), AES.MODE_ECB)
     # 优先逆向解密base64成bytes
     base64_decrypted = base64.decodebytes(text.encode(encoding='utf-8'))
-    print(base64_decrypted,type(base64_decrypted))
+    # print(base64_decrypted,type(base64_decrypted))
     # bytes解密
     decrypted_text = str(aes.decrypt(base64_decrypted),encoding='utf-8') # 执行解密密并转码返回str
     decrypted_text = base64.b64decode(decrypted_text.encode('utf-8')).decode('utf-8')
 
-    print(decrypted_text)
+    # print(decrypted_text)
     # print(json.loads(decrypted_text))
     # print(type(json.loads(decrypted_text)))
+    print('----------版本----------- \n', json.loads(decrypted_text)['version'], '\n',len(json.loads(decrypted_text)['version']))
     print('----------冷轧----------- \n',json.loads(decrypted_text)['冷轧']['英文'],':\n',len(json.loads(decrypted_text)['冷轧']['英文']))
     print(json.loads(decrypted_text)['冷轧']['中文'],':\n',len(json.loads(decrypted_text)['冷轧']['中文']))
     print('----------热轧----------- \n',json.loads(decrypted_text)['热轧']['英文'],':\n',len(json.loads(decrypted_text)['热轧']['英文']))
