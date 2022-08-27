@@ -41,7 +41,8 @@ TEMP_PATH_BIN = f'C:/Users/{os.getlogin()}/tempclassname.bin'
 def load_config(windows):
     formal_name = ''
     temp_file = False
-    url = 'https://raw.githubusercontent.com/guoyanannan/-me/master/classname.bin'
+    # url = 'https://raw.githubusercontent.com/guoyanannan/-me/master/classname.bin'
+    url = 'https://gitee.com/worldofyanan/annotation_tool/raw/master/classname.bin'
     if os.path.exists(PATH_BIN):
         formal_name = decrypt_ase(PATH_BIN)
         if formal_name:
@@ -74,7 +75,7 @@ def load_config(windows):
                     break
             else:
                 prompt_info = "网络异常，是否继续下载类别文件？"
-                formal_info = f'请通过{url}手动下载类别文件,并放至在C盘根目录！！！'
+                formal_info = f'请通过[  {url}  ]手动下载类别文件,并与管理员联系！！！'
                 reply = QtWidgets.QMessageBox.question(QtWidgets.QMainWindow(), '提示',
                                                        prompt_info, QtWidgets.QMessageBox.Yes |
                                                        QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
@@ -83,7 +84,7 @@ def load_config(windows):
                 else:
                     QtWidgets.QMessageBox.warning(QtWidgets.QMainWindow(), '提示',formal_info )
                     sys.exit()
-    #['version']
+    # ['version']
     temp_name = decrypt_ase(download)
     if formal_name:  # 原始bin文件存完整存在时
         if temp_name:  # 临时bin文件下载成功
@@ -999,7 +1000,7 @@ def main():
                     elif model_type == -1:
                         if flag_exit:
                             reply = QtWidgets.QMessageBox.question(self, '警告',
-                                                                   f"{img_name}不在{PType}类别中,是否关闭程序并更新 .bin文件？", QtWidgets.QMessageBox.Yes |
+                                                                   f"{img_name}不在{PType}类别中,是否关闭程序并更新？", QtWidgets.QMessageBox.Yes |
                                                                    QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
                             if reply == QtWidgets.QMessageBox.Yes:
                                 os.kill(os.getpid(),signal.SIGINT)
@@ -1238,7 +1239,7 @@ def main():
                     elif model_type == -1:
                         if flag_exit:
                             reply = QtWidgets.QMessageBox.question(self, '警告',
-                                                                   f"{img_name}不在{PType}类别中,是否关闭程序并更新 .bin文件？", QtWidgets.QMessageBox.Yes |
+                                                                   f"{img_name}不在{PType}类别中,是否关闭程序并更新 ？", QtWidgets.QMessageBox.Yes |
                                                                    QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
                             if reply == QtWidgets.QMessageBox.Yes:
                                 os.kill(os.getpid(),signal.SIGINT)
