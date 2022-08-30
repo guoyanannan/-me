@@ -81,7 +81,7 @@ def encrypt_oracle(v: str = '1.0.0.0'):
                            '背景五', '背景六', '背景七', '背景八', '麻点', '异物压入',
                            '水纹', '结疤', '氧化铁皮', '线性缺陷一', '疑似异物压入']
                        },
-                '棒材': {
+                '棒材':{
                        '英文': ['DaiFenLei', 'JingZhaGunYin', 'DaiTouGunYin', 'ZhaLan', 'KongDong', 'ZhaRuWaiWu',
                            'BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen',
                            'LiangHuaShang', 'XiaFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
