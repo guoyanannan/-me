@@ -90,16 +90,17 @@ def load_config(windows):
         if temp_name:  # 临时bin文件下载成功
             if temp_name == formal_name:
                 os.remove(TEMP_PATH_BIN)
-                print(TEMP_PATH_BIN)
+                print('临时文件与原始文件一致，删除临时文件：',TEMP_PATH_BIN)
             else:
                 os.remove(PATH_BIN)
-                print(PATH_BIN)
+                print('临时文件与原始文件不一致，删除原始文件：',PATH_BIN)
                 os.rename(TEMP_PATH_BIN, PATH_BIN)
-                print(TEMP_PATH_BIN,PATH_BIN)
+                print(TEMP_PATH_BIN,'→',PATH_BIN)
             return temp_name
         else:  # 临时bin文件下载失败,可能会残留临时文件
             if os.path.exists(TEMP_PATH_BIN):
                 os.remove(TEMP_PATH_BIN)
+                print('临时bin文件下载失败,删除可能会残留临时文件：', TEMP_PATH_BIN)
             return formal_name
     else:  # 原始bin文件不存在或文件不完整
         return temp_name
