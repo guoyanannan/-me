@@ -4,7 +4,6 @@ import json
 import logging
 import math
 import os
-import os.path as osp
 import sys
 import platform
 import qtpy
@@ -34,8 +33,8 @@ from labelme.config import get_config
 from labelme.logger import logger
 from labelme.utils import newIcon,info_box
 
-PATH_BIN = f'C:/Users/{os.getlogin()}/classname.bin'
-TEMP_PATH_BIN = f'C:/Users/{os.getlogin()}/tempclassname.bin'
+PATH_BIN = 'C:/ProgramData/Annotationtool/classname.bin'
+TEMP_PATH_BIN = 'C:/ProgramData/Annotationtool/tempclassname.bin'
 
 
 def load_config(windows):
@@ -223,6 +222,9 @@ def main():
         default=argparse.SUPPRESS,
     )
     args = parser.parse_args()
+
+    if not os.path.exists(os.path.dirname(PATH_BIN)):
+        os.makedirs(os.path.dirname(PATH_BIN))
 
     if args.version:
         print("{0} {1}".format(__appname__, __version__))
