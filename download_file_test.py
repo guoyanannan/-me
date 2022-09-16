@@ -10,6 +10,7 @@ print ("downloading with urllib.............")
 try:
     if not os.path.exists(os.path.dirname(PATH_BIN)):
         os.makedirs(os.path.dirname(PATH_BIN))
+    print('download...........')
     _ = request.urlretrieve(url, PATH_BIN)
     print(math.ceil(os.path.getsize(PATH_BIN)/1024),'kb')
 except Exception as E:
