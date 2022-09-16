@@ -62,12 +62,12 @@ def encrypt_oracle(v: str = '1.0.0.0'):
                        '英文':['DaiFenLei', 'XianZhuangGunYin','JingZhaGunYin', 'DaiTouGunYin', 'YaLan', 'KongDong', 'ZhaRuWaiWu','BaoPian', 'JieBa', 'XianZhuangJiaZa', 'ZhuPiHuaShang', 'ZongXiangLieWen', 'GuaHen','LiangHuaShang', 'XianFeng', 'YiCiXiuPi', 'ErCiXiuPi', 'TieLinYaRu', 'YangHuaTiePi',
                              'ZhenHen','PianZhuangTieLin', 'BoXing', 'ShuiDi', 'ShuiWu', 'ShuiYin','BaoGuangYinHen', 'TingJiWenLi', 'BaiTieLin', 'ReZhaBianBuZheDie', 'ReZhaJuChiBian', 'LianGangHuaShang','LianGangJiaZa', 'LianGangXiWeiJiaZa', 'LianGangFenCeng', 'LianGangHeiDai', 'LianGangXianXingJiaZaWu',
                              'MXingLieWen','ReZhaBanBianHuaHen','ZhiGangXianXingJiaZa', 'ZhiGangYanMoHen', 'ReYaMoCaHen', 'LianGangBa', 'GongZuoGunMaDian','YiWuYaRu', 'TuBao', 'LaSiYaRu', 'AoKeng', 'CaShang', 'HuaShang', 'TiaoZhuangChongPi','LianGangBianBuKaiLie','ReZhaRCLHen',
-                             'ReZhaGunYin','ReZhaJiaSongGunYin','ReZhaYangHuaPiBoLi','ReZhaZhanGang','XiuMoYin','ShuiLiangYin','CeFanXian','LieBian','LieKou',],
+                             'ReZhaGunYin','ReZhaJiaSongGunYin','ReZhaYangHuaPiBoLi','ReZhaZhanGang','XiuMoYin','ShuiLiangYin','CeFanXian','LieBian','LieKou','BaHen','JiaZa','GunYin','ZangWu','PenMa','SheWeiYin','GangYin',],
 
                        '中文':['待分类', '线状辊印','精轧辊印', '带头辊印', '轧烂', '孔洞', '轧入外物','剥片', '结疤', '线状夹杂', '铸坯划伤', '纵向裂纹', '刮痕','亮划伤', '狭缝', '一次锈皮', '二次锈皮', '铁鳞压入', '氧化铁皮',
                              '振痕','片状铁鳞', '波形', '水滴', '水雾', '水印','曝光印痕', '停机纹理', '白铁鳞', '热轧边部折叠', '热轧锯齿边', '炼钢划伤','炼钢夹杂', '炼钢细微夹杂', '炼钢分层', '炼钢黑带', '炼钢线性夹杂物', 
                              'M型裂纹','热轧板边划痕','制钢线性夹杂', '制钢研磨痕', '热轧摩擦痕', '炼钢疤', '工作辊麻点','异物压入', '凸包', '拉丝压入', '凹坑', '擦伤', '划伤', '条状重皮','炼钢边部开裂','热轧RCL痕',
-                             '热轧辊印','热轧夹送辊印','热轧氧化皮剥离','热轧粘钢','修磨印','水梁印','侧翻线','裂边','裂口',]
+                             '热轧辊印','热轧夹送辊印','热轧氧化皮剥离','热轧粘钢','修磨印','水梁印','侧翻线','裂边','裂口','疤痕','夹杂','辊印','脏污','喷码','舌尾印','钢印']
                        },
                 '板材':{
                        '英文':['DaiFenLei', 'ZongXiangLieWen', 'HengXiangLieWen', 'BianLie', 'ShuiYin', 'GunYin',
