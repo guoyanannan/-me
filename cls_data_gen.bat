@@ -1,3 +1,3 @@
 call activate lm
-python bank_data_gen.py
+python cls_data_gen.py
 pause
