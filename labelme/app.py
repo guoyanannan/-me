@@ -1531,8 +1531,8 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             imagePath = osp.relpath(self.imagePath, osp.dirname(filename))
             imagePath = os.path.split(imagePath)[-1]
-            # imageData = self.imageData if self._config["store_data"] else None
-            imageData = None if self._config["store_data"] else self.imageData
+            imageData = self.imageData if self._config["store_data"] else None
+            # imageData = None if self._config["store_data"] else self.imageData
             if osp.dirname(filename) and not osp.exists(osp.dirname(filename)):
                 os.makedirs(osp.dirname(filename))
             lf.save(

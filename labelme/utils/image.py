@@ -21,7 +21,9 @@ def img_data_to_arr(img_data):
 
 
 def img_b64_to_arr(img_b64):
+    # str to bytes
     img_data = base64.b64decode(img_b64)
+    # bytes to arr
     img_arr = img_data_to_arr(img_data)
     return img_arr
 

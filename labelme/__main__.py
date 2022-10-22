@@ -565,10 +565,10 @@ def main():
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
 
-            info ={}
+            info = dict()
             info["classnames"] = EngCls
             with open(os.path.join(Save_dir,'classnames.json'),'w',encoding='utf8') as f:
-                json.dump(info,f,indent=4,separators=(',', ': '))
+                json.dump(info, f, indent=4, separators=(',', ': '))
 
             total_num = len(os.listdir(JsonPaths))
             image_index = 0
@@ -657,9 +657,8 @@ def main():
                      EngCls, mode,info_q,
                      imgs_save_dir, labels_save_dir,
                      save_img_dir_back,save_Ann_dir_back,
-                     resolution,
+                     class_info_dict,
                      debug=False):
-
             ImagePIL = Image.open(img_path).convert('L')  # w,h
             w_ori, h_ori= ImagePIL.size  # 原图的大小
             img = np.array(ImagePIL)
@@ -739,7 +738,6 @@ def main():
                     print('后:', x1_, y1_, x2_, y2_)
                     tmp = img[y1_: y2_, x1_: x2_]
                     print(tmp.shape)
-                    tmp_PIL = Image.fromarray(tmp)
                     if debug:
                         tmp_cr = np.random.randint(0, 255, 3, np.uint8)
                         rgb_cr = (int(tmp_cr[0]), int(tmp_cr[1]), int(tmp_cr[2]))
@@ -754,6 +752,8 @@ def main():
                     # 遍历每一个框
                     for re in range(res.shape[0]):
                         xmin, ymin, xmax, ymax, label = res[re]
+                        # 目标框面积
+                        src_roi_area = (xmax-xmin)*(ymax-ymin)
                         # 如果坐标异常，进行坐标转换
                         if int(xmin) > int(xmax):
                             xmin, xmax = xmax, xmin
@@ -780,14 +780,19 @@ def main():
                             break
 
                         # 如果框完全在切分图中
+                        dst_roi_area = (xmax-xmin)*(ymax-ymin)
                         if int(xmin) >= x1_ and int(xmax) <= x2_ and int(ymin) >= y1_ and int(ymax) <= y2_:
-                            flag[0][re] = 1  # 用于判断是第几个bbox坐标信息在该小图中
-                            x1 = int(xmin)-x1_
-                            y1 = int(ymin)-y1_
-                            x2 = int(xmax)-x1_
-                            y2 = int(ymax)-y1_
-                            temp_boxes.append((x1, y1, x2, y2, label))
-                            youwu = True
+                            x1 = int(xmin) - x1_
+                            y1 = int(ymin) - y1_
+                            x2 = int(xmax) - x1_
+                            y2 = int(ymax) - y1_
+                            if dst_roi_area > src_roi_area/3:
+                                flag[0][re] = 1  # 用于判断是第几个bbox坐标信息在该小图中
+                                temp_boxes.append((x1, y1, x2, y2, label))
+                                class_info_dict[str(label)]=class_info_dict.get(str(label),0)+1
+                                youwu = True
+                            else:
+                                tmp[y1:y2,x1:x2]=0
 
                         # 只有一小部分的直接过滤//暂时舍弃
                         # elif int(xmin) < c or int(xmax) > c+h or int(ymin) < r or int(ymax) > r+w_win_size:
@@ -795,6 +800,7 @@ def main():
 
                     if xiefou:
                         if youwu:
+                            tmp_PIL = Image.fromarray(tmp)
                             if mode == 'VOC':
                                 img_new_name = img_name + '_%05d.%s' % (i,img_mat)
                                 lal_new_name = img_name + '_%05d.%s' % (i,label_mat)
@@ -839,7 +845,11 @@ def main():
                 if img_mat.lower() in ('bmp', 'png', 'jpg'):
                     img_path = os.path.join(img_dir_parh, img_name)
                     label_path = os.path.join(label_dir_path, label_name)
-                    if not os.path.exists(label_path):
+                    shape_num = True
+                    if os.path.exists(label_path):
+                        data = json.load(open(label_path, 'r', encoding='utf8'))
+                        shape_num = bool(len(data['shapes']))
+                    if not os.path.exists(label_path) or not shape_num:
                         self.mutex.acquire()
                         self.mk_dir(save_img_dir_back)
                         self.mk_dir(save_Ann_dir_back)
@@ -849,12 +859,13 @@ def main():
                             pass
                         img_save_path = os.path.join(save_img_dir_back, img_name)
                         shutil.copy(img_path, img_save_path)
+
                 self.mutex.acquire()
                 no_index += 1
                 self.mutex.release()
 
         def transform_splitdata_thread(self,label_path_set,label_mat,EngCls,mold,save_img_dir,save_Ann_dir,
-                                  save_img_dir_back,save_Ann_dir_back,cam_res,info_q):
+                                  save_img_dir_back,save_Ann_dir_back,cam_res,info_q,class_info_dict):
             global Num
             for JsonPath in label_path_set:
                 bk = 0
@@ -890,7 +901,7 @@ def main():
                          EngCls, mold,info_q,
                          save_img_dir, save_Ann_dir,
                          save_img_dir_back,save_Ann_dir_back,
-                         resolution=cam_res.lower(),
+                         class_info_dict,
                          )
                 self.mutex.acquire()
                 Num += 1
@@ -966,8 +977,9 @@ def main():
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
-            info = {}
+            info = dict()
             info["classnames"] = EngCls
+            class_infos = dict()
             with open(os.path.join(Save_dir, 'classnames.json'), 'w', encoding='utf8') as f:
                 json.dump(info, f, indent=4, separators=(',', ': '))
             total_num = len(glob.glob(JsonPaths + "/*.json"))
@@ -985,7 +997,8 @@ def main():
                                                                      save_img_dir_back,
                                                                      save_Ann_dir_back,
                                                                      cam_res,
-                                                                     warning_q)
+                                                                     warning_q,
+                                                                     class_infos)
                              )
 
                 th_.start()
@@ -1012,6 +1025,9 @@ def main():
                 if Num == total_num:
                     self.pbar.setValue(Num / total_num * 100)
                     QtWidgets.QApplication.processEvents()
+                    print('切分后类别名称及数量信息：',class_infos)
+                    with open(os.path.join(Save_dir, 'CurrClassInfo.json'), 'w', encoding='utf8') as f:
+                        json.dump(class_infos, f, indent=4, separators=(',', ': '))
                     if len(info_mat) != 0 and warning_q.empty():
                         str_linenew = '\n'*40
                         QtWidgets.QMessageBox.information(self, '提示', f"以下数据不存在 或 非bmp、非jpg、非png: \n {info_mat}{str_linenew}", )
@@ -1035,7 +1051,7 @@ def main():
         def transform_data_thread(self,label_path_set,label_mat,EngCls,
                                   mold,save_img_dir,save_Ann_dir,
                                   save_img_dir_back,save_Ann_dir_back,
-                                  info_q,):
+                                  info_q,class_dict):
 
             global image_index
             for JsonPath in label_path_set:
@@ -1093,6 +1109,9 @@ def main():
                             info_q.put(info)
                             continue
                         box_info.append([x1, y1, x2, y2, className])
+                        self.mutex.acquire()
+                        class_dict[str(className)] = class_dict.get(str(className),0)+1
+                        self.mutex.release()
 
                 if len(box_info) == 0:
                     if not os.path.exists(save_img_dir_back):
@@ -1205,13 +1224,14 @@ def main():
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
-            info ={}
+            info = dict()
             info["classnames"] = EngCls
             with open(os.path.join(Save_dir,'classnames.json'),'w',encoding='utf8') as f:
                 json.dump(info,f,indent=4,separators=(',', ': '))
 
             total_num = len(glob.glob(JsonPaths + "/*.json"))
             thread_data_num = math.ceil(total_num / 10)
+            curr_class_info = dict()
             global image_index
             image_index = 0
             for j in range(10):
@@ -1225,7 +1245,8 @@ def main():
                                    save_Ann_dir,
                                    save_img_dir_back,
                                    save_Ann_dir_back,
-                                   warning_q,)
+                                   warning_q,
+                                   curr_class_info,)
                              )
                 th_.start()
             info_mat = ''
@@ -1251,6 +1272,9 @@ def main():
                 if image_index == total_num:
                     self.pbar.setValue(image_index / total_num * 100)
                     QtWidgets.QApplication.processEvents()
+                    print('当前类别名称及数量信息：',curr_class_info)
+                    with open(os.path.join(Save_dir, 'CurrClassInfo.json'), 'w', encoding='utf8') as f:
+                        json.dump(curr_class_info, f, indent=4, separators=(',', ': '))
                     if len(info_mat) != 0 and warning_q.empty():
                         str_linenew = '\n' * 40
                         print(info_mat)

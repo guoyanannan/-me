@@ -1,3 +1,4 @@
+import os
 import os.path as osp
 import shutil
 
@@ -32,6 +33,8 @@ def get_default_config():
 
     # save default config to ~/.labelmerc
     user_config_file = osp.join(osp.expanduser("~"), ".labelmerc")
+    if osp.exists(user_config_file):
+        os.remove(user_config_file)
     if not osp.exists(user_config_file):
         try:
             shutil.copy(config_file, user_config_file)
@@ -60,6 +63,7 @@ def validate_config_item(key, value):
 
 def get_config(config_file_or_yaml=None, config_from_args=None):
     # 1. default config
+
     config = get_default_config()
 
     # 2. specified as file or yaml

@@ -165,6 +165,7 @@ class LabelFile(object):
 
     @staticmethod
     def _check_image_height_and_width(imageData, imageHeight, imageWidth):
+        # str ro arr
         img_arr = utils.img_b64_to_arr(imageData)
         if imageHeight is not None and img_arr.shape[0] != imageHeight:
             logger.error(
@@ -194,6 +195,7 @@ class LabelFile(object):
     ):
 
         if imageData is not None:
+            # bytes to str
             imageData = base64.b64encode(imageData).decode("utf-8")
             imageHeight, imageWidth = self._check_image_height_and_width(
                 imageData, imageHeight, imageWidth
