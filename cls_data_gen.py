@@ -102,10 +102,11 @@ def encrypt_oracle(v: str = '1.0.0.0'):
                            '背景十一', '锈皮脱落', '凹坑', '耳朵', '划伤', '背景']
                         },
                 '铸坯':{
-                       '英文':['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin',
-                           'ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 'CaHuaShang', 'DuanMianHanZha', 'JieHen'],
-                       '中文':['背景', '纵向裂纹', '横向裂纹', '划伤', '水渣印', '辊印',
-                           '渣皮', '切割开口', '停止线', '擦划伤', '端面焊渣', '接痕']
+                       '英文':['BeiJing', 'ZongXiangLieWen', 'HengXiangLieWen', 'HuaShang', 'ShuiZhaYin', 'GunYin','ZhaPi', 'QieGeKaiKou', 'TingZhiXian', 
+                               'CaHuaShang', 'DuanMianHanZha', 'JieHen','BianBuLieWen', 'AoKeng', 'JieBa', 'YiWuYaRu', 'ZhenHen', 'ZongXiangAoXian','ZongXiangHuaShang', 
+                               'YangHuaTiePi'],
+                       '中文':['背景', '纵向裂纹', '横向裂纹', '划伤', '水渣印', '辊印','渣皮', '切割开口', '停止线', '擦划伤', '端面焊渣', '接痕',
+                              '边部裂纹', '凹坑', '结疤', '异物压入', '振痕', '纵向凹陷','纵向划伤', '氧化铁皮']
                        },
                 }
     mystr = json.dumps(cls_info)
