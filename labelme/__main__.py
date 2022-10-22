@@ -662,6 +662,7 @@ def main():
             ImagePIL = Image.open(img_path).convert('L')  # w,h
             w_ori, h_ori= ImagePIL.size  # 原图的大小
             img = np.array(ImagePIL)
+            # print('id-img:',id(img))
             # print(f'{img_path}:::{img.shape}')
             # img = cv2.resize(img, (2048, 2048))#可以resize也可以不resize，看情况而定
             if debug:
@@ -719,7 +720,7 @@ def main():
                     is_h_break = False
                     is_w_break = False
                     y1_, y2_, x1_, x2_ = j, j + h_win_size, k, k + w_win_size
-                    print('前', x1_, y1_, x2_, y2_)
+                    print('前:', x1_, y1_, x2_, y2_)
                     if h - y2_ <= 256:
                         y2_ = h
                         if y2_ - y1_ < h_win_size:
@@ -737,6 +738,8 @@ def main():
 
                     print('后:', x1_, y1_, x2_, y2_)
                     tmp = img[y1_: y2_, x1_: x2_]
+                    tmp_to_roi = tmp.copy()
+                    # print('id-tmp',id(tmp))
                     print(tmp.shape)
                     if debug:
                         tmp_cr = np.random.randint(0, 255, 3, np.uint8)
@@ -751,7 +754,7 @@ def main():
                     temp_boxes = []
                     # 遍历每一个框
                     for re in range(res.shape[0]):
-                        xmin, ymin, xmax, ymax, label = res[re]
+                        xmin, ymin, xmax, ymax, label = int(res[re][0]), int(res[re][1]), int(res[re][2]), int(res[re][3]), str(res[re][4])
                         # 目标框面积
                         src_roi_area = (xmax-xmin)*(ymax-ymin)
                         # 如果坐标异常，进行坐标转换
@@ -786,13 +789,22 @@ def main():
                             y1 = int(ymin) - y1_
                             x2 = int(xmax) - x1_
                             y2 = int(ymax) - y1_
-                            if dst_roi_area > src_roi_area/3:
+                            if dst_roi_area >= src_roi_area * 0.45:
+                                #print(f'in-{i}-{x1, y1, x2, y2}')
                                 flag[0][re] = 1  # 用于判断是第几个bbox坐标信息在该小图中
                                 temp_boxes.append((x1, y1, x2, y2, label))
+                                self.mutex.acquire()
                                 class_info_dict[str(label)]=class_info_dict.get(str(label),0)+1
+                                self.mutex.release()
                                 youwu = True
                             else:
-                                tmp[y1:y2,x1:x2]=0
+                                #print(f'split-{i}-{x1, y1, x2, y2}')
+                                h_temp,w_temp = tmp.shape
+                                y1 = y1 if y1>=10 else 0
+                                y2 = y2 if y2<=h_temp-10 else h_temp
+                                x1 = x1 if x1>=10 else 0
+                                x2 = x2 if x2<=w_temp-10 else w_temp
+                                tmp_to_roi[y1:y2,x1:x2]=0
 
                         # 只有一小部分的直接过滤//暂时舍弃
                         # elif int(xmin) < c or int(xmax) > c+h or int(ymin) < r or int(ymax) > r+w_win_size:
@@ -800,7 +812,7 @@ def main():
 
                     if xiefou:
                         if youwu:
-                            tmp_PIL = Image.fromarray(tmp)
+                            tmp_PIL = Image.fromarray(tmp_to_roi)
                             if mode == 'VOC':
                                 img_new_name = img_name + '_%05d.%s' % (i,img_mat)
                                 lal_new_name = img_name + '_%05d.%s' % (i,label_mat)
