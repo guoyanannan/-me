@@ -783,13 +783,14 @@ def main():
                             break
 
                         # 如果框完全在切分图中
-                        dst_roi_area = (xmax-xmin)*(ymax-ymin)
+                        dst_roi_h,dst_roi_w = (ymax-ymin),(xmax-xmin)
+                        dst_roi_area = dst_roi_h * dst_roi_w
                         if int(xmin) >= x1_ and int(xmax) <= x2_ and int(ymin) >= y1_ and int(ymax) <= y2_:
                             x1 = int(xmin) - x1_
                             y1 = int(ymin) - y1_
                             x2 = int(xmax) - x1_
                             y2 = int(ymax) - y1_
-                            if dst_roi_area >= src_roi_area * 0.45:
+                            if dst_roi_area >= src_roi_area * 0.35 and (dst_roi_h <25 or dst_roi_w<25):
                                 #print(f'in-{i}-{x1, y1, x2, y2}')
                                 flag[0][re] = 1  # 用于判断是第几个bbox坐标信息在该小图中
                                 temp_boxes.append((x1, y1, x2, y2, label))
@@ -800,11 +801,11 @@ def main():
                             else:
                                 #print(f'split-{i}-{x1, y1, x2, y2}')
                                 h_temp,w_temp = tmp.shape
-                                y1 = y1 if y1>=10 else 0
-                                y2 = y2 if y2<=h_temp-10 else h_temp
-                                x1 = x1 if x1>=10 else 0
-                                x2 = x2 if x2<=w_temp-10 else w_temp
-                                tmp_to_roi[y1:y2,x1:x2]=0
+                                y1_zeros = y1 if y1>=10 else 0
+                                y2_zeros = y2 if y2<=h_temp-10 else h_temp
+                                x1_zeros = x1 if x1>=10 else 0
+                                x2_zeros = x2 if x2<=w_temp-10 else w_temp
+                                tmp_to_roi[y1_zeros:y2_zeros,x1_zeros:x2_zeros]=0
 
                         # 只有一小部分的直接过滤//暂时舍弃
                         # elif int(xmin) < c or int(xmax) > c+h or int(ymin) < r or int(ymax) > r+w_win_size:
