@@ -790,7 +790,7 @@ def main():
                             y1 = int(ymin) - y1_
                             x2 = int(xmax) - x1_
                             y2 = int(ymax) - y1_
-                            if dst_roi_area >= src_roi_area * 0.35 and (dst_roi_h <25 or dst_roi_w<25):
+                            if dst_roi_area >= src_roi_area * 0.35 and (dst_roi_h >= 25 or dst_roi_w >= 25):
                                 #print(f'in-{i}-{x1, y1, x2, y2}')
                                 flag[0][re] = 1  # 用于判断是第几个bbox坐标信息在该小图中
                                 temp_boxes.append((x1, y1, x2, y2, label))
@@ -1039,7 +1039,7 @@ def main():
                     self.pbar.setValue(Num / total_num * 100)
                     QtWidgets.QApplication.processEvents()
                     print('切分后类别名称及数量信息：',class_infos)
-                    with open(os.path.join(Save_dir, 'CurrClassInfo.json'), 'w', encoding='utf8') as f:
+                    with open(os.path.join(Save_dir, 'currclassinfo.json'), 'w', encoding='utf8') as f:
                         json.dump(class_infos, f, indent=4, separators=(',', ': '))
                     if len(info_mat) != 0 and warning_q.empty():
                         str_linenew = '\n'*40
@@ -1286,7 +1286,7 @@ def main():
                     self.pbar.setValue(image_index / total_num * 100)
                     QtWidgets.QApplication.processEvents()
                     print('当前类别名称及数量信息：',curr_class_info)
-                    with open(os.path.join(Save_dir, 'CurrClassInfo.json'), 'w', encoding='utf8') as f:
+                    with open(os.path.join(Save_dir, 'currclassinfo.json'), 'w', encoding='utf8') as f:
                         json.dump(curr_class_info, f, indent=4, separators=(',', ': '))
                     if len(info_mat) != 0 and warning_q.empty():
                         str_linenew = '\n' * 40
