@@ -39,7 +39,8 @@ debug = True
 #     w_step_num = w//stride
 # else:
 #     w_step_num = w // stride + 1
-
+is_h_break = False
+is_w_break = False
 for j in range(0, h, stride): # r
     for k in range(0, w, stride): # c
         print(f'r:{j} c:{k}')
@@ -47,8 +48,8 @@ for j in range(0, h, stride): # r
         # flag = np.zeros([1, len(res)])  # 修改flag = np.zeros([1, len(res)])
         youwu = False  # 是否有物体
         xiefou = True  # 是否记录
-        is_h_break = False
         is_w_break = False
+        is_h_break = False
         y1_,y2_,x1_,x2_ = j,j+h_win_size,k,k+w_win_size
         print('前',x1_,y1_,x2_,y2_)
         if h - y2_ <= 256:

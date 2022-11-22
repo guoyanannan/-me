@@ -330,6 +330,7 @@ def main():
             self.win.show()
             self.win.raise_()
 
+        # 字符串是否是中文
         def isInZh(self,s):
             for c in s:
                 if '\u4e00' <= c <= '\u9fa5':
@@ -392,7 +393,7 @@ def main():
             if not DataPath:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择非空目录！！", )
                 return None,None, None
-            elif not ("images" and "labels") in os.listdir(DataPath):
+            elif "images" not in os.listdir(DataPath) and "labels" not in os.listdir(DataPath):
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择包含images和labels的目录！！", )
                 return None, None, None
             else:
@@ -415,6 +416,101 @@ def main():
                 temp_points.append([x, y])
             return temp_points
 
+        def thread_class_data(self,labels_path,_EngCls,info_q,Save_dir):
+            global image_index
+            for JsonPath in labels_path:
+                bk = 0
+                Roi_index = 1
+                ImagePath = JsonPath.replace('json','bmp').replace('labels','images')
+                ImgName = ImagePath.rsplit('\\')[-1].split('.', maxsplit=1)[0]  #
+                #print(ImagePath)
+                if not os.path.exists(ImagePath):
+                    ImagePath = JsonPath.replace('json','jpg').replace('labels','images')
+                if not os.path.exists(ImagePath):
+                    ImagePath = JsonPath.replace('json','png').replace('labels','images')
+                if not os.path.exists(ImagePath):
+                    info = {'name': ImgName, 'mode': 1}
+                    info_q.put(info)
+                    bk += 1
+                if bk == 1:
+                    self.mutex.acquire()
+                    image_index += 1
+                    self.mutex.release()
+                    continue
+                if platform.system() =="Windows":
+                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
+                elif platform.system() =="Linux":
+                    ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
+                    ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
+
+                ImgSrc = Image.open(ImagePath).convert('L')
+                ImgW, ImgH = ImgSrc.size
+                data = json.load(open(JsonPath,'r',encoding='utf8'))
+                shapeList = data['shapes']
+                for shape in shapeList:
+                    points = self.parse_points(shape['points'],ImgH,ImgW) #shape['points']
+                    className = shape["chineselabel"]
+                    eng_name = shape["label"]
+                    if str(eng_name).lower() not in _EngCls:
+                        #QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
+                        info = {'name': className+'@'+ImgName, 'model': -1}
+                        info_q.put(info)
+                        continue
+                    #print(ImagePath,Save_dir,className,eng_name,str(eng_name).lower() not in _EngCls)
+
+                    Subfolder = os.path.join(Save_dir, className)
+                    Roi_path = os.path.join(Subfolder, ImgName + "_" + str(Roi_index) + f".{ImgMat}")
+                    if shape['shape_type'] == 'rectangle':
+                        self.mutex.acquire()
+                        if not os.path.exists(Subfolder):
+                            os.makedirs(Subfolder)
+                        self.mutex.release()
+                        x1, y1, x2, y2 = (points[0][0],points[0][1],points[1][0],points[1][1])
+                        x1_temp = min(x1,x2)-50
+                        y1_temp = min(y1,y2)-50
+                        x2_temp = max(x1,x2)+50
+                        y2_temp = max(y1,y2)+50
+                        if x1_temp <= 0:
+                            x1_temp = 0
+                        if x2_temp >= ImgW:
+                            x2_temp = ImgW-1
+                        if y1_temp <= 0:
+                            y1_temp = 0
+                        if y2_temp >=ImgH:
+                            y2_temp = ImgH-1
+                        x1,y1,x2,y2 = x1_temp,y1_temp,x2_temp,y2_temp
+                        Roi_pil = ImgSrc.crop((x1,y1,x2,y2))
+                        Roi_pil.save(Roi_path)
+                        Roi_index += 1
+                    elif shape['shape_type']=='polygon':
+                        self.mutex.acquire()
+                        if not os.path.exists(Subfolder):
+                            os.makedirs(Subfolder)
+                        self.mutex.release()
+
+                        x,y,w,h = cv2.boundingRect(np.array(points).astype('int'))
+                        x1,y1,x2,y2 = x-50,y-50,x+w+50,y+h+50
+                        if x1 <= 0:
+                            x1 = 0
+                        if x2 >= ImgW:
+                            x2 = ImgW-1
+                        if y1 <= 0:
+                            y1 = 0
+                        if y2 >=ImgH:
+                            y2 = ImgH-1
+                        Roi_pil = ImgSrc.crop((x1,y1,x2,y2))
+                        Roi_pil.save(Roi_path)
+                        Roi_index += 1
+
+                    else:
+                        info = {'name': ImgName, 'model': -2}
+                        info_q.put(info)
+
+                self.mutex.acquire()
+                image_index +=1
+                self.mutex.release()
+
         def GenClsData(self):
             JsonPaths,ImgPaths,PType = self.chackPath()
             if not JsonPaths or not ImgPaths:
@@ -434,102 +530,74 @@ def main():
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
+
+            from queue import Queue
+            warning_q = Queue()
+            # 强制转换为小写
+            _EngCls = list(map(lambda x: x.lower(),EngCls))
             Save_dir = JsonPaths.replace('labels', 'ClassifiedData')
             self.check_file(Save_dir)
             total_num = len(os.listdir(JsonPaths))
+            every_thread_num = math.ceil(total_num/10)
+            global image_index
             image_index = 0
-            bk = 0
-            for JsonPath in glob.glob(JsonPaths+"/*.json"):
-                ImagePath = JsonPath.replace('json','bmp').replace('labels','images')
-                #print(ImagePath)
-                if not os.path.exists(ImagePath):
-                    ImagePath = JsonPath.replace('json','jpg').replace('labels','images')
-                if not os.path.exists(ImagePath):
-                    ImagePath = JsonPath.replace('json','png').replace('labels','images')
-                if not os.path.exists(ImagePath):
-                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
-                    QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg、png! 点击OK键继续！", )
-                    bk += 1
-                if bk >= 1:
-                    image_index += 1
-                    self.pbar.setValue(image_index / total_num * 100)
-                    QtWidgets.QApplication.processEvents()
-                    continue
+            for j in range(10):
+                labels = glob.glob(JsonPaths+"/*.json")[j*every_thread_num:(j+1)*every_thread_num]
+                thread_cls = Thread(target=self.thread_class_data,
+                                    args=(labels,_EngCls,warning_q,Save_dir))
+                thread_cls.start()
 
-                if platform.system() =="Windows":
-                    ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
-                    ImgMat = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[1]
-                elif platform.system() =="Linux":
-                    ImgName = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[0]
-                    ImgMat = ImagePath.split('/')[-1].rsplit('.', maxsplit=1)[1]
-
-                ImgSrc = Image.open(ImagePath).convert('L')
-                ImgW, ImgH = ImgSrc.size
-                data = json.load(open(JsonPath,'r',encoding='utf8'))
-                shapeList = data['shapes']
-                #print(shapeList)
-                Roi_index = 1
-                for shape in shapeList:
-                    points = self.parse_points(shape['points'],ImgH,ImgW) #shape['points']
-                    className = shape["chineselabel"]
-                    eng_name = shape["label"]
-                    if str(eng_name) not in EngCls:
-                        QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
-                        continue
-                    print(ImagePath,Save_dir,className,eng_name,str(eng_name) not in EngCls)
-
-                    Subfolder = os.path.join(Save_dir, className)
-                    Roi_path = os.path.join(Subfolder, ImgName + "_" + str(Roi_index) + f".{ImgMat}")
-                    if shape['shape_type'] == 'rectangle':
-                        if not os.path.exists(Subfolder):
-                            os.makedirs(Subfolder)
-                        x1, y1, x2, y2 = (points[0][0],points[0][1],points[1][0],points[1][1])
-                        x1_temp = min(x1,x2)-100
-                        y1_temp = min(y1,y2)-100
-                        x2_temp = max(x1,x2)+100
-                        y2_temp = max(y1,y2)+100
-                        if x1_temp <= 0:
-                            x1_temp = 0
-                        if x2_temp >= ImgW:
-                            x2_temp = ImgW-1
-                        if y1_temp <= 0:
-                            y1_temp = 0
-                        if y2_temp >=ImgH:
-                            y2_temp = ImgH-1
-                        x1,y1,x2,y2 = x1_temp,y1_temp,x2_temp,y2_temp
-                        Roi_pil = ImgSrc.crop((x1,y1,x2,y2))
-                        Roi_pil.save(Roi_path)
-                        Roi_index += 1
-                    elif shape['shape_type']=='polygon':
-                        if not os.path.exists(Subfolder):
-                            os.makedirs(Subfolder)
-
-                        x,y,w,h = cv2.boundingRect(np.array(points).astype('int'))
-                        x1,y1,x2,y2 = x-100,y-100,x+w+100,y+h+100
-                        if x1 <= 0:
-                            x1 = 0
-                        if x2 >= ImgW:
-                            x2 = ImgW-1
-                        if y1 <= 0:
-                            y1 = 0
-                        if y2 >=ImgH:
-                            y2 = ImgH-1
-                        Roi_pil = ImgSrc.crop((x1,y1,x2,y2))
-                        Roi_pil.save(Roi_path)
-                        Roi_index += 1
-
-                    else:
-                        reply = QtWidgets.QMessageBox.question(self, '提示',
-                                                               "暂不支持多边形之外的类型，是否过滤并继续？", QtWidgets.QMessageBox.Yes |
-                                                               QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-                        if reply ==QtWidgets.QMessageBox.Yes:
-                            continue
-                        else:
-                            break
-                image_index +=1
+            info_mat = ''
+            info_box_type = ''
+            flag_exit = True
+            while 1:
                 self.pbar.setValue(image_index / total_num * 100)
                 QtWidgets.QApplication.processEvents()
-                # time.sleep(0.05)
+                if not warning_q.empty():
+                    infos = warning_q.get()
+                    img_info, model_type = tuple(infos.values())
+                    if model_type==1:
+                        info_mat += img_info + '<>'
+                    elif model_type==-1:
+                        img_name, img_class = img_info.split('@')
+                        if flag_exit:
+                            reply = QtWidgets.QMessageBox.question(self, '警告',
+                                                                   f"{img_name}:{img_class}不在{PType}类别中,是否关闭程序并更新 ？", QtWidgets.QMessageBox.Yes |
+                                                                   QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                            if reply == QtWidgets.QMessageBox.Yes:
+                                os.kill(os.getpid(),signal.SIGINT)
+                            else:
+                                continue
+                    elif model_type==-2:
+                        info_box_type += img_info + '<>'
+
+                if image_index == total_num:
+                    self.pbar.setValue(image_index / total_num * 100)
+                    QtWidgets.QApplication.processEvents()
+                    if warning_q.empty():
+                        if len(info_mat) != 0 and len(info_box_type) ==0:
+                            str_linenew = '\n' * 40
+                            print(info_mat)
+                            QtWidgets.QMessageBox.information(self, '提示',
+                                                              f"以下数据表示不存在 或 非bmp、非jpg、非png: \n {info_mat}{str_linenew}", )
+                            break
+                        elif len(info_mat) == 0 and len(info_box_type) !=0:
+                            str_linenew = '\n' * 40
+                            print(info_box_type)
+                            QtWidgets.QMessageBox.information(self, '提示',
+                                                              f"以下数据表示非多边形标注,提取分类无效: \n {info_box_type}{str_linenew}", )
+                            break
+                        elif len(info_mat) != 0 and len(info_box_type) !=0:
+                            str_linenew = '\n' * 40
+                            print(info_mat)
+                            QtWidgets.QMessageBox.information(self, '提示',
+                                                              f"以下数据表示不存在 或 非bmp、非jpg、非png: \n {info_mat}{str_linenew}", )
+                            print(info_box_type)
+                            QtWidgets.QMessageBox.information(self, '提示',
+                                                              f"以下数据表示非多边形标注,提取分类无效: \n {info_box_type}{str_linenew}", )
+                            break
+                        else:
+                            break
 
         def GenSegData(self):
             JsonPaths, ImgPaths, PType = self.chackPath()
@@ -543,12 +611,7 @@ def main():
             self.check_file(save_img_dir)
             self.check_file(save_msk_dir)
             self.check_file(save_msk_dir_rgb)
-            # if not os.path.exists(save_img_dir):
-            #     os.makedirs(save_img_dir)
-            # if not os.path.exists(save_msk_dir):
-            #     os.makedirs(save_msk_dir)
-            # if not os.path.exists(save_msk_dir_rgb):
-            #     os.makedirs(save_msk_dir_rgb)
+
             if "板" in PType:
                 EngCls = self.class_info_dict['板材']['英文']
             elif "棒" in PType:
@@ -564,7 +627,8 @@ def main():
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
-
+            # 转换为小写
+            _EngCls = list(map(lambda x:x.lower(),EngCls))
             info = dict()
             info["classnames"] = EngCls
             with open(os.path.join(Save_dir,'classnames.json'),'w',encoding='utf8') as f:
@@ -586,7 +650,7 @@ def main():
                     ImgName = ImagePath.split('\\')[-1].rsplit('.', maxsplit=1)[0]
                     QtWidgets.QMessageBox.information(self, '提示', f"图片:{ImgName}.??? 不存在或者格式为非bmp、jpg、png! 点击OK键继续！", )
                     bk += 1
-                if bk >= 1:
+                if bk == 1:
                     image_index += 1
                     self.pbar.setValue(image_index / total_num * 100)
                     QtWidgets.QApplication.processEvents()
@@ -613,10 +677,10 @@ def main():
                         flag += 1
                         points = self.parse_points(shape['points'],imgH,imgW)
                         className = shape["label"]
-                        if str(className) not in EngCls:
+                        if str(className).lower() not in _EngCls:
                             QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
                             continue
-                        classIndex = EngCls.index(className)
+                        classIndex = _EngCls.index(str(className).lower())
                         # print('classIndex:',classIndex,'className:',className)
                         xy = list(map(abs_point, points))
                         ImageDraw.Draw(mask).polygon(xy=xy, outline=1, fill=1)
@@ -654,7 +718,7 @@ def main():
         def clip_img(self,
                      img_path, img_name, img_mat,
                      label_path,label_mat ,
-                     EngCls, mode,info_q,
+                     EngCls, _EngCls,mode,info_q,
                      imgs_save_dir, labels_save_dir,
                      save_img_dir_back,save_Ann_dir_back,
                      class_info_dict,
@@ -682,7 +746,7 @@ def main():
                     y2_tmp = max(y1, y2)*(h/h_ori)
                     x1, y1, x2, y2 = x1_tmp, y1_tmp, x2_tmp, y2_tmp
                     className = shape["label"]
-                    if str(className) not in EngCls:
+                    if str(className).lower() not in _EngCls:
                         info = {'name': className, 'model': -1}
                         info_q.put(info)
                         continue
@@ -708,15 +772,15 @@ def main():
             w_win_size = 1024
             h_win_size = 1024
             stride = 1024-256
-            # if resolution.lower() == '4k'.lower():
-            #     stride = 1024 - 256  # 重叠的大小（768），设置这个可以使分块有重叠  stride =win_size 说明设置的分块没有重叠
-            # else:
-            #     stride = 896
+
+            # 行方向和列方向退出标志
+            is_h_break,is_w_break = False,False
             for j in range(0, h, stride): # r
                 for k in range(0, w, stride): # c
                     flag = np.zeros([1, len(res)])  # 修改flag = np.zeros([1, len(res)])
-                    youwu = False  # 是否有物体
-                    xiefou = True  # 是否记录
+                    object_flag = False # 是否有物体
+                    write_flag = True   # 是否记录
+                    split_flag = False  # 是否存在被切分的框
                     is_h_break = False
                     is_w_break = False
                     y1_, y2_, x1_, x2_ = j, j + h_win_size, k, k + w_win_size
@@ -767,19 +831,24 @@ def main():
                         # 1,剪裁区域左边界将box切分
                         if int(xmin) < x1_ < int(xmax):
                             xmin = x1_ + 1
+                            split_flag =True
                         # 2,剪裁区域右边界将box切分
                         if int(xmax) > x2_ > int(xmin):
                             xmax = x2_ - 1
+                            split_flag = True
                         # 3,剪裁区域上边界将box切分
                         if int(ymin) < y1_ < int(ymax):
                             ymin = y1_ + 1
+                            split_flag = True
                         # 4，剪裁区域下边界将box切分
                         if int(ymax) > y2_ > int(ymin):
                             ymax = y2_ - 1
+                            split_flag = True
 
                         # 如果坐标离谱(包含处理前和原生标注框信息)，跳出遍历框的循环
                         if int(xmin) == int(xmax) or int(ymin) == int(ymax):
-                            xiefou = False
+                            write_flag = False
+                            split_flag = False
                             break
 
                         # 如果框完全在切分图中
@@ -790,14 +859,14 @@ def main():
                             y1 = int(ymin) - y1_
                             x2 = int(xmax) - x1_
                             y2 = int(ymax) - y1_
-                            if dst_roi_area >= src_roi_area * 0.35 and (dst_roi_h >= 25 or dst_roi_w >= 25):
+                            if dst_roi_area >= src_roi_area * 0.25 and (dst_roi_h >= 25 or dst_roi_w >= 25):
                                 #print(f'in-{i}-{x1, y1, x2, y2}')
                                 flag[0][re] = 1  # 用于判断是第几个bbox坐标信息在该小图中
                                 temp_boxes.append((x1, y1, x2, y2, label))
                                 self.mutex.acquire()
                                 class_info_dict[str(label)]=class_info_dict.get(str(label),0)+1
                                 self.mutex.release()
-                                youwu = True
+                                object_flag = True
                             else:
                                 #print(f'split-{i}-{x1, y1, x2, y2}')
                                 h_temp,w_temp = tmp.shape
@@ -811,20 +880,28 @@ def main():
                         # elif int(xmin) < c or int(xmax) > c+h or int(ymin) < r or int(ymax) > r+w_win_size:
                         #     pass
 
-                    if xiefou:
-                        if youwu:
+                    if write_flag:
+                        if object_flag:
                             tmp_PIL = Image.fromarray(tmp_to_roi)
+                            img_new_name = img_name + '_%05d.%s' % (i, img_mat)
+                            lal_new_name = img_name + '_%05d.%s' % (i, label_mat)
+                            img_save_path_1 = os.path.join(imgs_save_dir, img_new_name)
+                            lal_save_path_1 = os.path.join(labels_save_dir, lal_new_name)
+                            if split_flag:
+                                imgs_save_dir_2 = imgs_save_dir + 'Uncertain'
+                                labels_save_dir_2 = labels_save_dir + 'Uncertain'
+                                self.mutex.acquire()
+                                self.mk_dir(imgs_save_dir_2)
+                                self.mk_dir(labels_save_dir_2)
+                                self.mutex.release()
+                                img_save_path_2 = os.path.join(imgs_save_dir_2, img_new_name)
+                                lal_save_path_2 = os.path.join(labels_save_dir_2, lal_new_name)
                             if mode == 'VOC':
-                                img_new_name = img_name + '_%05d.%s' % (i,img_mat)
-                                lal_new_name = img_name + '_%05d.%s' % (i,label_mat)
-                                img_save_path_1 = os.path.join(imgs_save_dir,img_new_name)
-                                lal_save_path_1 = os.path.join(labels_save_dir, lal_new_name)
-                                self.write_xml(tmp_PIL, temp_boxes, img_new_name, lal_save_path_1, img_save_path_1)
+                                if not split_flag:
+                                    self.write_xml(tmp_PIL, temp_boxes, img_new_name, lal_save_path_1, img_save_path_1)
+                                else:
+                                    self.write_xml(tmp_PIL, temp_boxes, img_new_name, lal_save_path_2, img_save_path_2)
                             elif mode == 'YOLO':
-                                img_new_name = img_name + '_%05d.%s' % (i, img_mat)
-                                lal_new_name = img_name + '_%05d.%s' % (i, label_mat)
-                                img_save_path_1 = os.path.join(imgs_save_dir, img_new_name)
-                                lal_save_path_1 = os.path.join(labels_save_dir, lal_new_name)
                                 class_txt_path = os.path.join(labels_save_dir,'..','classes.txt')
                                 if not os.path.exists(class_txt_path):
                                     self.mutex.acquire()
@@ -838,8 +915,10 @@ def main():
                                     self.mk_dir(data_path)
                                     shutil.copy(class_txt_path,os.path.join(data_path,'predefined_classes.txt'))
                                     self.mutex.release()
-
-                                self.write_txt(tmp_PIL, temp_boxes, lal_save_path_1, img_save_path_1, EngCls)
+                                if not split_flag:
+                                    self.write_txt(tmp_PIL, temp_boxes, lal_save_path_1, img_save_path_1, _EngCls)
+                                else:
+                                    self.write_txt(tmp_PIL, temp_boxes, lal_save_path_2, img_save_path_2, _EngCls)
                     else:
                         print(f'{img_name}.{img_mat}切分至第{i}份框坐标x1,x2重合成线，忽略当前第{i}份图像！！！！！')
 
@@ -880,6 +959,7 @@ def main():
         def transform_splitdata_thread(self,label_path_set,label_mat,EngCls,mold,save_img_dir,save_Ann_dir,
                                   save_img_dir_back,save_Ann_dir_back,cam_res,info_q,class_info_dict):
             global Num
+            _EngCls = list(map(lambda x: x.lower(), EngCls))
             for JsonPath in label_path_set:
                 bk = 0
                 ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
@@ -911,7 +991,7 @@ def main():
                 result = self.clip_img(
                          ImagePath, ImgName, ImgMat,
                          JsonPath, label_mat,
-                         EngCls, mold,info_q,
+                         EngCls, _EngCls,mold,info_q,
                          save_img_dir, save_Ann_dir,
                          save_img_dir_back,save_Ann_dir_back,
                          class_info_dict,
@@ -990,6 +1070,7 @@ def main():
             else:
                 QtWidgets.QMessageBox.warning(self, '错误', "请选择支持的产品类型样本集！！", )
                 return
+
             info = dict()
             info["classnames"] = EngCls
             class_infos = dict()
@@ -1052,14 +1133,8 @@ def main():
         def split_img_xml(self):
             self.SplitAndTransform(mold='VOC')
 
-        # def split_img_xml_8(self):
-        #     self.SplitAndTransform(mold='VOC', cam_res='8k')
-
         def split_img_yolo(self):
             self.SplitAndTransform(mold='YOLO')
-
-        # def split_img_yolo_8(self):
-        #     self.SplitAndTransform(mold='YOLO', cam_res='8k')
 
         def transform_data_thread(self,label_path_set,label_mat,EngCls,
                                   mold,save_img_dir,save_Ann_dir,
@@ -1067,6 +1142,8 @@ def main():
                                   info_q,class_dict):
 
             global image_index
+            # 小写
+            _EngCls = list(map(lambda x: x.lower(), EngCls))
             for JsonPath in label_path_set:
                 bk = 0
                 ImagePath = JsonPath.replace('json', 'bmp').replace('labels', 'images')
@@ -1116,7 +1193,7 @@ def main():
                         y2_tmp = max(y1,y2)
                         x1, y1, x2, y2 = x1_tmp, y1_tmp, x2_tmp, y2_tmp
                         className = shape["label"]
-                        if str(className) not in EngCls:
+                        if str(className).lower() not in _EngCls:
                             #QtWidgets.QMessageBox.information(self, '提示', f"类别{className}:不属于当前{PType}类型类别! 点击OK继续！！！")
                             info = {'name': className, 'model': -1}
                             info_q.put(info)
@@ -1161,7 +1238,7 @@ def main():
                             self.mk_dir(data_path)
                             shutil.copy(class_txt_path, os.path.join(data_path, 'predefined_classes.txt'))
                             self.mutex.release()
-                        self.write_txt(ImagePIL,box_info,lal_save_path_1,img_save_path_1,EngCls)
+                        self.write_txt(ImagePIL,box_info,lal_save_path_1,img_save_path_1,_EngCls)
                     self.mutex.acquire()
                     image_index += 1
                     self.mutex.release()
@@ -1317,7 +1394,7 @@ def main():
             sizee=img.size
             for box in boxes:
                 cls = box[-1]
-                cls_id = class_name.index(cls)
+                cls_id = class_name.index(cls.lower())
                 bbox = [box[0],box[2],box[1],box[3]]
                 bb = convert(sizee,bbox)
                 label_file.write(str(cls_id) + " " + " ".join([str(a) for a in bb]) + '\n')
@@ -1412,7 +1489,7 @@ def main():
             if not path_req :
                 QtWidgets.QMessageBox.warning(self, '错误',"请选择非空目录！！")
             else:
-                if glob.glob(path_req+"/*bmp") or glob.glob(path_req+"/*jpg"):
+                if glob.glob(path_req+"/*.bmp") or glob.glob(path_req+"/*.jpg") or glob.glob(path_req+"/*.png"):
                     if text_name and not self.isInZh(str(text_name)):
                         if glob.glob(path_req + "/*bmp"):
                             self.renameFiles(path_req, "bmp", n_time1, text_name, 0)
