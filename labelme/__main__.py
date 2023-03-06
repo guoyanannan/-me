@@ -859,22 +859,30 @@ def main():
                             y1 = int(ymin) - y1_
                             x2 = int(xmax) - x1_
                             y2 = int(ymax) - y1_
-                            if dst_roi_area >= src_roi_area * 0.25 and (dst_roi_h >= 25 or dst_roi_w >= 25):
-                                #print(f'in-{i}-{x1, y1, x2, y2}')
+                            if split_flag:
+                                if dst_roi_area >= src_roi_area * 0.25 and (dst_roi_h >= 25 or dst_roi_w >= 25):
+                                    #print(f'in-{i}-{x1, y1, x2, y2}')
+                                    flag[0][re] = 1  # 用于判断是第几个bbox坐标信息在该小图中
+                                    temp_boxes.append((x1, y1, x2, y2, label))
+                                    self.mutex.acquire()
+                                    class_info_dict[str(label)]=class_info_dict.get(str(label),0)+1
+                                    self.mutex.release()
+                                    object_flag = True
+                                else:
+                                    #print(f'split-{i}-{x1, y1, x2, y2}')
+                                    h_temp,w_temp = tmp.shape
+                                    y1_zeros = y1 if y1>=10 else 0
+                                    y2_zeros = y2 if y2<=h_temp-10 else h_temp
+                                    x1_zeros = x1 if x1>=10 else 0
+                                    x2_zeros = x2 if x2<=w_temp-10 else w_temp
+                                    tmp_to_roi[y1_zeros:y2_zeros,x1_zeros:x2_zeros]=0
+                            else:
                                 flag[0][re] = 1  # 用于判断是第几个bbox坐标信息在该小图中
                                 temp_boxes.append((x1, y1, x2, y2, label))
                                 self.mutex.acquire()
                                 class_info_dict[str(label)]=class_info_dict.get(str(label),0)+1
                                 self.mutex.release()
                                 object_flag = True
-                            else:
-                                #print(f'split-{i}-{x1, y1, x2, y2}')
-                                h_temp,w_temp = tmp.shape
-                                y1_zeros = y1 if y1>=10 else 0
-                                y2_zeros = y2 if y2<=h_temp-10 else h_temp
-                                x1_zeros = x1 if x1>=10 else 0
-                                x2_zeros = x2 if x2<=w_temp-10 else w_temp
-                                tmp_to_roi[y1_zeros:y2_zeros,x1_zeros:x2_zeros]=0
 
                         # 只有一小部分的直接过滤//暂时舍弃
                         # elif int(xmin) < c or int(xmax) > c+h or int(ymin) < r or int(ymax) > r+w_win_size:
